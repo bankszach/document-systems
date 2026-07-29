@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Document Systems mark</title>
+  <rect width="512" height="512" rx="96" fill="#0d5f4e"/>
+  <path d="M128 100h176l80 80v232H128z" fill="#fffdf8"/>
+  <path d="M304 100v80h80" fill="#d7a52c"/>
+  <path d="M184 244h144M184 296h144M184 348h96" fill="none" stroke="#0d5f4e" stroke-width="22" stroke-linecap="round"/>
+</svg>

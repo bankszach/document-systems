@@ -144,6 +144,8 @@ assert(
   toolList.every((tool) =>
     tool.annotations.readOnlyHint === true &&
     tool.annotations.openWorldHint === false &&
+    tool.annotations.destructiveHint === false &&
+    tool.outputSchema &&
     tool.inputSchema.additionalProperties === false
   ),
   "Tool safety/schema declarations are incomplete.",

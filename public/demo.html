@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Live Document Systems MCP workflow demonstration.">
+    <title>Live Demo — Document Systems</title>
+    <link rel="icon" href="/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/demo.js" defer></script>
+  </head>
+  <body>
+    <div class="shell demo-shell">
+      <header>
+        <a class="brand" href="/"><img src="/logo.svg" alt=""><span>Document Systems</span></a>
+        <nav aria-label="Primary"><a href="/">Product</a><a href="/privacy">Privacy</a><a href="/support">Support</a></nav>
+      </header>
+      <main>
+        <p class="eyebrow">Live MCP demonstration</p>
+        <h1>From proposal to traceable view.</h1>
+        <p class="lede">
+          This walkthrough calls the production MCP endpoint. Nothing is saved,
+          accepted, or made operative. A
+          <a href="/demo.mp4">short reviewer recording</a> shows the complete
+          sequence.
+        </p>
+        <div class="demo-controls" aria-label="Demo steps">
+          <button type="button" data-step="profiles">1. Inspect profiles</button>
+          <button type="button" data-step="compose">2. Compose proposal</button>
+          <button type="button" data-step="validate">3. Validate integrity</button>
+          <button type="button" data-step="render">4. Render review view</button>
+        </div>
+        <section class="demo-stage" aria-live="polite">
+          <h2 id="demo-title">Ready</h2>
+          <p id="demo-status" class="demo-status">
+            Start by inspecting the four bounded document profiles.
+          </p>
+          <pre id="demo-output" class="demo-output">Endpoint: /mcp
+Transport: stateless Streamable HTTP
+Persistence: none</pre>
+        </section>
+      </main>
+      <footer>Document Systems — a Banks Inc. service publication.</footer>
+    </div>
+  </body>
+</html>

@@ -5,12 +5,12 @@ import readline from "node:readline";
 import { fileURLToPath } from "node:url";
 
 const SERVER_NAME = "document-systems";
-const SERVER_VERSION = "0.1.0";
+const SERVER_VERSION = "0.2.0";
 const EXPRESSION_SCHEMA = "document-systems/expression@0.1";
 const RECEIPT_SCHEMA = "document-systems/validation-receipt@0.1";
 const MANIFEST_SCHEMA = "document-systems/view-manifest@0.1";
 const CATALOG_SCHEMA = "document-systems/profile-catalog@0.1";
-const MAX_PAYLOAD_BYTES = 1_000_000;
+export const MAX_PAYLOAD_BYTES = 1_000_000;
 const MAX_ELEMENTS = 500;
 const MAX_SOURCES = 200;
 const PROFILE_IDS = ["normative", "operational", "research", "human-agent"];
@@ -1325,7 +1325,11 @@ function tools() {
         composition_limit: { type: "object" },
         persistence_status: { const: "NOT_PERSISTED" },
       }, ["schema", "profiles", "composition_limit", "persistence_status"]),
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
     },
     {
       name: TOOL_NAMES.composeExpression,
@@ -1357,7 +1361,11 @@ function tools() {
         "elements",
       ]),
       outputSchema: genericEnvelopeSchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
     },
     {
       name: TOOL_NAMES.validateExpression,
@@ -1403,7 +1411,11 @@ function tools() {
         "scope_limit",
         "persistence_status",
       ]),
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
     },
     {
       name: TOOL_NAMES.renderView,
@@ -1435,21 +1447,21 @@ function tools() {
         "artifact",
         "persistence_status",
       ]),
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
     },
   ];
 }
 
-function send(message) {
-  process.stdout.write(`${JSON.stringify(message)}\n`);
+function resultMessage(id, result) {
+  return { jsonrpc: "2.0", id, result };
 }
 
-function sendResult(id, result) {
-  send({ jsonrpc: "2.0", id, result });
-}
-
-function sendError(id, code, message) {
-  send({ jsonrpc: "2.0", id, error: { code, message } });
+function errorMessage(id, code, message) {
+  return { jsonrpc: "2.0", id, error: { code, message } };
 }
 
 function handleToolCall(params) {
@@ -1476,47 +1488,83 @@ function handleToolCall(params) {
   throw new Error(`Unknown tool: ${params?.name ?? ""}`);
 }
 
-function handleRequest(message) {
+export function getToolDefinitions() {
+  return tools();
+}
+
+export function processJsonRpcMessage(message) {
+  if (!message || typeof message !== "object" || Array.isArray(message)) {
+    return errorMessage(null, -32600, "Invalid Request");
+  }
+  if (message.jsonrpc !== "2.0" || typeof message.method !== "string") {
+    return errorMessage(message.id ?? null, -32600, "Invalid Request");
+  }
   const { id, method, params } = message;
   if (method === "initialize") {
-    sendResult(id, {
-      protocolVersion: params?.protocolVersion ?? "2025-11-25",
+    const requestedVersion = params?.protocolVersion;
+    const supportedVersions = new Set([
+      "2025-11-25",
+      "2025-06-18",
+      "2024-11-05",
+    ]);
+    return resultMessage(id, {
+      protocolVersion: supportedVersions.has(requestedVersion)
+        ? requestedVersion
+        : "2025-11-25",
       capabilities: { tools: {} },
       serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
       instructions:
         "This stateless read-only server normalizes explicit semantic inputs, creates content-addressed proposal Expressions, validates supplied structure and lineage, and renders bounded projections. It writes nothing and cannot establish authority, truth, behavior, acceptance, operative status, repository head, or complete lineage.",
     });
-    return;
   }
   if (method === "ping") {
-    sendResult(id, {});
-    return;
+    return resultMessage(id, {});
   }
   if (method === "tools/list") {
-    sendResult(id, { tools: tools() });
-    return;
+    return resultMessage(id, { tools: tools() });
   }
   if (method === "tools/call") {
     try {
-      sendResult(id, handleToolCall(params));
+      return resultMessage(id, handleToolCall(params));
     } catch (error) {
-      sendError(id, -32602, error instanceof Error ? error.message : String(error));
+      return errorMessage(
+        id,
+        -32602,
+        error instanceof Error ? error.message : String(error),
+      );
     }
-    return;
   }
   if (id !== undefined) {
-    sendError(id, -32601, `Method not found: ${method}`);
+    return errorMessage(id, -32601, `Method not found: ${method}`);
   }
+  return undefined;
 }
 
-const lines = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
-lines.on("line", (line) => {
-  if (line.trim().length === 0) {
-    return;
-  }
-  try {
-    handleRequest(JSON.parse(line));
-  } catch {
-    // Invalid notification input has no response ID to correlate.
-  }
-});
+function runStdioServer() {
+  const lines = readline.createInterface({
+    input: process.stdin,
+    crlfDelay: Infinity,
+  });
+  lines.on("line", (line) => {
+    if (line.trim().length === 0) {
+      return;
+    }
+    try {
+      const response = processJsonRpcMessage(JSON.parse(line));
+      if (response !== undefined) {
+        process.stdout.write(`${JSON.stringify(response)}\n`);
+      }
+    } catch {
+      process.stdout.write(
+        `${JSON.stringify(errorMessage(null, -32700, "Parse error"))}\n`,
+      );
+    }
+  });
+}
+
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  runStdioServer();
+}
