@@ -82,6 +82,9 @@ function walk(directory) {
       throw new Error(`Symlinks are not allowed in the release: ${absolutePath}`);
     }
     if (entryValue.isDirectory()) {
+      if ([".agent", ".git"].includes(entryValue.name)) {
+        continue;
+      }
       walk(absolutePath);
       continue;
     }
