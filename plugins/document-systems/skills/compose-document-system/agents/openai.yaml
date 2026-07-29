@@ -1,0 +1,12 @@
+interface:
+  display_name: "Compose Document System"
+  short_description: "Build a content-addressed document proposal"
+  default_prompt: "Use $compose-document-system to turn this document need into a content-addressed proposal Expression, structural receipt, and traceable view."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "documentSystems"
+      description: "Deterministic document profile, composition, validation, and rendering tools."
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true

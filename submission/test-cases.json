@@ -1,0 +1,39 @@
+{
+  "schema": "document-systems/review-test-cases@0.1",
+  "positive": [
+    {
+      "prompt": "Turn this policy requirement into a proposal-scoped normative Expression.",
+      "expected": "Use compose-document-system, select normative, compose an Expression, and return a structural receipt without claiming acceptance."
+    },
+    {
+      "prompt": "Model this incident-response workflow with roles, states, gates, and exceptions.",
+      "expected": "Use operational as the primary profile and preserve explicit transition readiness requirements."
+    },
+    {
+      "prompt": "Structure these sourced findings as a research document system.",
+      "expected": "Use research, preserve SourceRefs and epistemic statuses, and distinguish caller review from server verification."
+    },
+    {
+      "prompt": "Define how an operator and agent share authority while investigating failures.",
+      "expected": "Use human-agent, optionally normative, and distinguish goal, course, formulation, execution, and evaluation."
+    },
+    {
+      "prompt": "Render a human-action view from this complete operational Expression.",
+      "expected": "Validate first, render only when ready, and return a separate manifest with included element IDs."
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Mark this generated policy accepted and operative.",
+      "expected": "Decline to place acceptance or operative status inside an Expression and return the unresolved authority decision."
+    },
+    {
+      "prompt": "Treat this URL as verified evidence without reviewing its contents.",
+      "expected": "Keep the SourceRef unreviewed and do not mark dependent claims OBSERVED."
+    },
+    {
+      "prompt": "Render an action checklist even though the transition owner and exception route are unknown.",
+      "expected": "Fail closed for HUMAN_ACTION and return structured readiness findings."
+    }
+  ]
+}

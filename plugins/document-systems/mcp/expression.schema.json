@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "document-systems/expression@0.1",
+  "title": "Document Systems Expression",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "work_id",
+    "title",
+    "proposal_state",
+    "profiles",
+    "purpose",
+    "source_refs",
+    "elements",
+    "lineage",
+    "provenance"
+  ],
+  "properties": {
+    "schema": {
+      "const": "document-systems/expression@0.1"
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^work:[a-z0-9][a-z0-9.-]*:[a-z0-9][a-z0-9.-]*$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "proposal_state": {
+      "const": "PROPOSED"
+    },
+    "profiles": {
+      "$ref": "#/$defs/profileSelection"
+    },
+    "purpose": {
+      "$ref": "#/$defs/purpose"
+    },
+    "source_refs": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "$ref": "#/$defs/sourceRef"
+      }
+    },
+    "elements": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "$ref": "#/$defs/element"
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parents"],
+      "properties": {
+        "parents": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/parentRef"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generated_by",
+        "generation_method",
+        "input_expression_refs"
+      ],
+      "properties": {
+        "generated_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": {
+              "enum": ["CODEX_SKILL", "CALLER"]
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          }
+        },
+        "generation_method": {
+          "enum": ["SYNTHESIS", "TRANSFORMATION", "REVISION"]
+        },
+        "input_expression_refs": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/parentRef"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "canonicalization", "value"],
+      "properties": {
+        "algorithm": {
+          "const": "sha-256"
+        },
+        "canonicalization": {
+          "const": "RFC8785"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "profileRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_id", "version", "profile_digest"],
+      "properties": {
+        "profile_id": {
+          "enum": ["normative", "operational", "research", "human-agent"]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "profileSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary"],
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/profileRef"
+        },
+        "secondary": {
+          "$ref": "#/$defs/profileRef"
+        }
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statement", "scope", "non_goals"],
+      "properties": {
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "scope": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "non_goals": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "source_kind",
+        "locator",
+        "availability",
+        "review_assertion"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^SRC-[A-Z0-9][A-Z0-9_-]*$"
+        },
+        "source_kind": {
+          "enum": [
+            "RESEARCH_PACKET",
+            "PRIMARY_SOURCE",
+            "PROVIDED_RECORD",
+            "OBSERVATION",
+            "MEASUREMENT",
+            "TEST_RESULT"
+          ]
+        },
+        "locator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["uri"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "selector": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 300
+            }
+          }
+        },
+        "availability": {
+          "enum": ["REFERENCE_ONLY", "EXCERPT_SUPPLIED", "CONTENT_SUPPLIED"]
+        },
+        "integrity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["digest", "digest_origin"],
+          "properties": {
+            "digest": {
+              "$ref": "#/$defs/digest"
+            },
+            "digest_origin": {
+              "enum": [
+                "CALLER_SUPPLIED",
+                "SERVER_COMPUTED_FROM_SUPPLIED_CONTENT"
+              ]
+            }
+          }
+        },
+        "review_assertion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "enum": ["NOT_ASSERTED", "REVIEWED_BY_CALLER"]
+            },
+            "asserted_by": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        }
+      }
+    },
+    "parentRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relation",
+        "work_id",
+        "expression_id",
+        "expression_digest"
+      ],
+      "properties": {
+        "relation": {
+          "enum": ["DERIVED_FROM", "REVISES", "TRANSLATES"]
+        },
+        "work_id": {
+          "type": "string"
+        },
+        "expression_id": {
+          "type": "string",
+          "pattern": "^expr:sha256:[a-f0-9]{64}$"
+        },
+        "expression_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": ["element_id", "kind", "title", "statement"],
+      "properties": {
+        "element_id": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_-]*$"
+        },
+        "kind": {
+          "enum": [
+            "AUTHORITY",
+            "ROLE",
+            "CLAIM",
+            "REQUIREMENT",
+            "STATE",
+            "TRANSITION",
+            "EXCEPTION",
+            "VERIFICATION",
+            "ASSUMPTION",
+            "DECISION_GATE",
+            "HANDOFF",
+            "HUMAN_AGENT_ALLOCATION",
+            "EVALUATION_CRITERION"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "epistemic_status": {
+          "enum": [
+            "OBSERVED",
+            "INFERRED",
+            "PROPOSED",
+            "CONTRADICTED",
+            "NOT_ESTABLISHED"
+          ]
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "assumption_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "counterevidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "actor_ref": {
+          "type": "string"
+        },
+        "authority_ref": {
+          "type": "string"
+        },
+        "verification_ref": {
+          "type": "string"
+        },
+        "from_state": {
+          "type": "string"
+        },
+        "to_state": {
+          "type": "string"
+        },
+        "owner_ref": {
+          "type": "string"
+        },
+        "gate_evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exception_route_ref": {
+          "type": "string"
+        },
+        "target_ref": {
+          "type": "string"
+        },
+        "criterion": {
+          "type": "string"
+        },
+        "allocation_party": {
+          "enum": ["HUMAN", "AGENT", "JOINT"]
+        },
+        "allocation_type": {
+          "enum": [
+            "GOAL",
+            "COURSE",
+            "FORMULATION",
+            "REVISION",
+            "EXECUTION",
+            "AUTHORITY",
+            "EVALUATION"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

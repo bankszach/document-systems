@@ -1,0 +1,12 @@
+interface:
+  display_name: "Audit Document System"
+  short_description: "Audit Expression integrity and evidence"
+  default_prompt: "Use $audit-document-system to audit this proposal Expression for integrity, supplied lineage, profile readiness, evidence, and authority gaps."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "documentSystems"
+      description: "Deterministic document profile and validation tools."
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,20 @@
+{
+  "name": "document-systems-public",
+  "interface": {
+    "displayName": "Document Systems"
+  },
+  "plugins": [
+    {
+      "name": "document-systems",
+      "source": {
+        "source": "local",
+        "path": "./plugins/document-systems"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

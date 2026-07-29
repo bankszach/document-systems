@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "documentSystems": {
+      "title": "Document Systems",
+      "description": "Compose, validate, and render content-addressed proposal Expressions without persistence.",
+      "cwd": ".",
+      "command": "node",
+      "args": [
+        "./mcp/server.mjs"
+      ]
+    }
+  }
+}

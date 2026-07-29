@@ -1,0 +1,88 @@
+{
+  "schema": "document-systems/profile-catalog@0.1",
+  "profiles": [
+    {
+      "profile_id": "normative",
+      "version": "0.1.0",
+      "title": "Normative",
+      "job": "Define required, recommended, permitted, or prohibited behavior.",
+      "required_element_kinds": [
+        "AUTHORITY",
+        "REQUIREMENT",
+        "EXCEPTION",
+        "VERIFICATION"
+      ],
+      "view_sections": [
+        "Authority and scope",
+        "Requirements",
+        "Exceptions",
+        "Conformance"
+      ]
+    },
+    {
+      "profile_id": "operational",
+      "version": "0.1.0",
+      "title": "Operational",
+      "job": "Coordinate roles, state changes, decisions, exceptions, and handoffs through time.",
+      "required_element_kinds": [
+        "ROLE",
+        "STATE",
+        "TRANSITION",
+        "EXCEPTION"
+      ],
+      "view_sections": [
+        "Objective",
+        "Roles",
+        "State and gates",
+        "Exceptions",
+        "Handoff"
+      ]
+    },
+    {
+      "profile_id": "research",
+      "version": "0.1.0",
+      "title": "Research",
+      "job": "State questions, claims, methods, evidence, results, and limitations.",
+      "required_element_kinds": [
+        "CLAIM",
+        "VERIFICATION",
+        "EXCEPTION"
+      ],
+      "view_sections": [
+        "Question",
+        "Claims",
+        "Method and evidence",
+        "Results",
+        "Limitations"
+      ]
+    },
+    {
+      "profile_id": "human-agent",
+      "version": "0.1.0",
+      "title": "Human-agent",
+      "job": "Allocate goals, authority, formulation, execution, evaluation, and exceptions across human-agent work.",
+      "required_element_kinds": [
+        "ROLE",
+        "HUMAN_AGENT_ALLOCATION",
+        "EVALUATION_CRITERION",
+        "EXCEPTION"
+      ],
+      "required_distinctions": [
+        "goal versus executable course",
+        "human versus agent contribution",
+        "criterion versus generated result",
+        "proposal versus authorized action",
+        "supported condition versus returned exception",
+        "joint outcome versus model performance",
+        "formulation and revision versus execution"
+      ],
+      "view_sections": [
+        "Human objective",
+        "Roles and authority",
+        "Allocation and operating loop",
+        "Exceptions",
+        "Evaluation"
+      ]
+    }
+  ]
+}

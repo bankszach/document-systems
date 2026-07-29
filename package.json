@@ -1,0 +1,10 @@
+{
+  "name": "document-systems-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check plugins/document-systems/mcp/server.mjs && node --check plugins/document-systems/mcp/test-server.mjs && node scripts/validate-package.mjs",
+    "test": "npm run check && node plugins/document-systems/mcp/test-server.mjs"
+  }
+}

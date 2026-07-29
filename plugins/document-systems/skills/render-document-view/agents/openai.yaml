@@ -1,0 +1,12 @@
+interface:
+  display_name: "Render Document View"
+  short_description: "Render a traceable Expression projection"
+  default_prompt: "Use $render-document-view to render a human-review, human-action, or machine projection from this proposal Expression."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "documentSystems"
+      description: "Deterministic document validation and rendering tools."
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true
