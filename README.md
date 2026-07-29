@@ -1,7 +1,9 @@
 # Document Systems
 
-Document Systems is a proposal-scoped Codex plugin for composing, validating,
-auditing, and rendering consequential documents from a small semantic model.
+Document Systems is a proposal-scoped Codex and ChatGPT plugin for composing,
+validating, auditing, and rendering consequential documents from a small
+semantic model. It is published as a Banks Inc. service publication at
+[documents.banksinc.us](https://documents.banksinc.us).
 
 It packages three skills and a stateless MCP server. The server writes nothing,
 accepts nothing, and cannot make a document authoritative or operative.
@@ -55,7 +57,14 @@ The plugin requires Node.js and uses no third-party runtime packages.
 | `validate_document_expression` | Return a scoped structural receipt for an Expression and supplied lineage. |
 | `render_document_view` | Render a bounded, traceable projection without writing an artifact. |
 
-All tools advertise `readOnlyHint: true` and `openWorldHint: false`.
+All tools advertise `readOnlyHint: true`, `openWorldHint: false`, and
+`destructiveHint: false`, and each declares an output schema.
+
+The public stateless Streamable HTTP endpoint is:
+
+```text
+https://documents.banksinc.us/mcp
+```
 
 ## Safety boundary
 
@@ -83,10 +92,10 @@ element-level traceability, and the no-write boundary.
 
 ## Distribution status
 
-This repository is a public GitHub marketplace for Codex. It is not yet a
-listing in the universal ChatGPT and Codex Plugins Directory. Universal
-submission requires a production HTTPS MCP endpoint, verified publisher
-identity, public policy and support pages, review test cases, and OpenAI review.
+This repository is a public GitHub marketplace for Codex and contains the
+production HTTPS MCP transport, public policy pages, reviewer test cases, and
+submission materials for the universal ChatGPT and Codex Plugins Directory.
+Directory availability remains subject to OpenAI review and publisher release.
 
 ## License
 

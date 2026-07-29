@@ -29,8 +29,8 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 if (manifest.name !== entry.name || manifest.name !== "document-systems") {
   throw new Error("Marketplace and manifest plugin names differ.");
 }
-if (manifest.version !== "0.1.0") {
-  throw new Error("The release manifest must use version 0.1.0.");
+if (manifest.version !== "0.2.0") {
+  throw new Error("The release manifest must use version 0.2.0.");
 }
 if (manifest.license !== "MIT") {
   throw new Error("The release manifest must declare the repository license.");
@@ -44,6 +44,51 @@ for (const relativePath of [
   const target = path.resolve(pluginRoot, relativePath);
   if (!target.startsWith(`${pluginRoot}${path.sep}`) || !fs.existsSync(target)) {
     throw new Error(`Manifest path does not resolve inside the plugin: ${relativePath}`);
+  }
+}
+
+for (const relativePath of [
+  "api/mcp.mjs",
+  "api/health.mjs",
+  "api/openai-apps-challenge.mjs",
+  "public/index.html",
+  "public/demo.html",
+  "public/demo.js",
+  "public/demo.mp4",
+  "public/privacy.html",
+  "public/terms.html",
+  "public/support.html",
+  "public/logo.svg",
+  "public/logo.png",
+  "chatgpt-app-submission.json",
+  "submission/listing.json",
+  "scripts/dev-public.mjs",
+  "vercel.json",
+]) {
+  const target = path.join(repositoryRoot, relativePath);
+  if (!fs.existsSync(target)) {
+    throw new Error(`Required publication file is missing: ${relativePath}`);
+  }
+}
+
+const submission = JSON.parse(
+  fs.readFileSync(path.join(repositoryRoot, "chatgpt-app-submission.json"), "utf8"),
+);
+if (
+  Object.keys(submission.tools ?? {}).length !== 4 ||
+  submission.test_cases?.length !== 5 ||
+  submission.negative_test_cases?.length !== 3
+) {
+  throw new Error("Submission package must cover four tools and exactly 5 positive plus 3 negative tests.");
+}
+for (const [name, tool] of Object.entries(submission.tools)) {
+  const annotations = tool.annotations ?? {};
+  if (
+    annotations.readOnlyHint !== true ||
+    annotations.openWorldHint !== false ||
+    annotations.destructiveHint !== false
+  ) {
+    throw new Error(`Submission annotations are incomplete for ${name}.`);
   }
 }
 
@@ -82,7 +127,7 @@ function walk(directory) {
       throw new Error(`Symlinks are not allowed in the release: ${absolutePath}`);
     }
     if (entryValue.isDirectory()) {
-      if ([".agent", ".git"].includes(entryValue.name)) {
+      if ([".agent", ".git", ".vercel", "node_modules"].includes(entryValue.name)) {
         continue;
       }
       walk(absolutePath);

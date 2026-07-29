@@ -1,12 +1,12 @@
 {
   "name": "document-systems",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Compose, validate, audit, and render content-addressed document-system proposals without persisting or accepting them.",
   "author": {
-    "name": "Zach Banks",
-    "url": "https://github.com/bankszach"
+    "name": "Banks Inc.",
+    "url": "https://banksinc.us"
   },
-  "homepage": "https://github.com/bankszach/document-systems",
+  "homepage": "https://documents.banksinc.us",
   "repository": "https://github.com/bankszach/document-systems",
   "license": "MIT",
   "keywords": [
@@ -21,14 +21,14 @@
     "displayName": "Document Systems",
     "shortDescription": "Governed document models, validation, and views",
     "longDescription": "Build immutable proposal Expressions from four bounded document profiles, validate structural and evidence boundaries, and render traceable stakeholder views. The plugin writes nothing and cannot make a document operative or accepted.",
-    "developerName": "Zach Banks",
+    "developerName": "Banks Inc.",
     "category": "Productivity",
     "capabilities": [
       "Content-addressed document modeling",
       "Structural and lineage validation",
       "Traceable stakeholder view rendering"
     ],
-    "websiteURL": "https://github.com/bankszach/document-systems",
+    "websiteURL": "https://documents.banksinc.us",
     "defaultPrompt": [
       "Model this document need as a proposal-scoped Expression.",
       "Audit this Expression's integrity, lineage, and evidence boundaries.",

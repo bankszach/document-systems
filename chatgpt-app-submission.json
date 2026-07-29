@@ -1,0 +1,128 @@
+{
+  "$schema": "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "Document Systems",
+    "subtitle": "Govern document proposals",
+    "description": "Document Systems helps users compose deterministic proposal Expressions, validate structural and evidence boundaries, inspect supplied lineage, and render traceable review or action views. It never persists results or treats generated work as accepted, authoritative, or operative.",
+    "category": "PRODUCTIVITY"
+  },
+  "tools": {
+    "list_document_profiles": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Returns the fixed profile catalog and content digests without creating or changing state.",
+        "open_world_justification": "Does not contact or modify any external service or publicly visible system.",
+        "destructive_justification": "Does not delete, overwrite, revoke, send, or perform an irreversible action."
+      }
+    },
+    "compose_document_expression": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Computes and returns a deterministic proposal Expression from supplied structured inputs without persisting it.",
+        "open_world_justification": "Does not publish, transmit to third parties, or change publicly visible state.",
+        "destructive_justification": "Only returns a new in-memory result and cannot delete, overwrite, send, or revoke anything."
+      }
+    },
+    "validate_document_expression": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Computes a structural receipt for caller-supplied data and supplied lineage without writing or changing either.",
+        "open_world_justification": "Does not access or modify repositories, websites, accounts, or other external systems.",
+        "destructive_justification": "Reports validation findings without deleting, overwriting, revoking, sending, or executing an action."
+      }
+    },
+    "render_document_view": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Computes a bounded text or JSON projection from a supplied Expression and returns it without persistence.",
+        "open_world_justification": "Does not publish the projection or change any external or publicly visible system.",
+        "destructive_justification": "Cannot delete, overwrite, revoke, send, or make the rendered proposal operative."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Inspect the available document profiles before choosing a model.",
+      "user_prompt": "List the document profiles available in Document Systems and briefly distinguish their purposes.",
+      "file_attachment_urls": null,
+      "tools_triggered": "list_document_profiles",
+      "expected_output": "Returns the normative, operational, research, and human-agent profiles with their fixed versions, boundaries, and content digests.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Compose a proposal-scoped normative document model.",
+      "user_prompt": "Model a proposal for an expense-approval policy with an explicit authority, approver role, reimbursement requirement, exception route, and verification step. Keep it proposed rather than accepted.",
+      "file_attachment_urls": null,
+      "tools_triggered": "compose_document_expression",
+      "expected_output": "Returns a deterministic normative Expression with content identity, proposal state, traceable semantic elements, and NOT_PERSISTED status.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Compose a bounded operational workflow.",
+      "user_prompt": "Create a proposed incident-response workflow with an operator, ready and resolved states, a gated transition, supporting evidence, and a blocked exception route.",
+      "file_attachment_urls": null,
+      "tools_triggered": "compose_document_expression",
+      "expected_output": "Returns a deterministic operational Expression that preserves the supplied roles, states, transition gate, evidence reference, and exception route.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Validate an Expression without overstating the result.",
+      "user_prompt": "Validate the Document Systems Expression from the previous step and explain what the receipt establishes and does not establish.",
+      "file_attachment_urls": null,
+      "tools_triggered": "validate_document_expression",
+      "expected_output": "Returns a structural receipt with integrity and readiness status, scoped checks, supplied-lineage status, explicit establishes fields, and explicit non-establishment boundaries.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Render a traceable human-action view from a ready Expression.",
+      "user_prompt": "Render a human-action Markdown view from the validated operational Expression, preserving element traceability and the proposal-only notice.",
+      "file_attachment_urls": null,
+      "tools_triggered": "render_document_view",
+      "expected_output": "Returns a rendered Markdown artifact and view manifest only if readiness passes, with included element IDs and NOT_PERSISTED status.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Do not trigger for unrelated calendar requests.",
+      "user_prompt": "What meetings do I have tomorrow?",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it has no calendar access or scheduling workflow.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for external web research.",
+      "user_prompt": "Search the web for the latest building-code changes in California.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it does not browse, retrieve, or verify external sources.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for sending or signing documents.",
+      "user_prompt": "Email this contract to the whole company and mark it signed by everyone.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it cannot send messages, collect signatures, approve documents, or change operative state.",
+      "expected_output_url": null
+    }
+  ]
+}
