@@ -1,7 +1,7 @@
 {
   "name": "document-systems",
   "version": "0.3.0",
-  "description": "Compile, validate, gate, render, and verify content-addressed document-system proposals without accepting or executing them.",
+  "description": "Experimental tools for compiling, validating, rendering, and verifying content-addressed document-system proposals.",
   "author": {
     "name": "Banks Inc.",
     "url": "https://banksinc.us"
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Document Systems",
-    "shortDescription": "Governed document models, validation, and views",
-    "longDescription": "Build immutable proposal Expressions from four bounded document profiles, enforce caller-reviewed semantic invariants, compile portable release packets, and render traceable stakeholder views. The plugin writes nothing and cannot make a document operative or accepted.",
+    "shortDescription": "Experimental document models and validation",
+    "longDescription": "Experimental research prototype for building immutable proposal Expressions from four bounded document profiles, checking caller-supplied invariants, compiling portable packets, and rendering traceable views. Product utility over ordinary review is unproven. The plugin writes nothing and cannot make a document correct, operative, or accepted.",
     "developerName": "Banks Inc.",
     "category": "Productivity",
     "capabilities": [
