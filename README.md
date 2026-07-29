@@ -90,6 +90,16 @@ profile drift, supplied lineage, evidence laundering, lifecycle contamination,
 profile overcomposition, fail-closed action rendering, HTML escaping,
 element-level traceability, and the no-write boundary.
 
+Run the external OSHA, CISA, CDC, and NIST benchmark:
+
+```bash
+npm run benchmark:real-world
+```
+
+See [Real-World Benchmark v0.1](docs/REAL-WORLD-BENCHMARK.md) for the measured
+structural-defect detection, semantic misses, and payload overhead. The current
+decision is situational value, not general document intelligence.
+
 ## Distribution status
 
 This repository is a public GitHub marketplace for Codex and contains the
