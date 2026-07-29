@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions should preserve the production boundary:
+Contributions should preserve the experimental safety boundary:
 
 - proposal Expressions remain immutable and content-addressed;
 - profile composition remains one primary plus at most one secondary;
@@ -19,3 +19,7 @@ npm test
 Include a behavioral probe for any change intended to prevent a recurring
 failure. New profiles or server-owned persistence require separate evidence,
 privacy review, and an explicit authority change.
+
+Do not describe the project as production-ready or submit it to a public
+directory until the promotion gate in
+`docs/EXPERIMENTAL-EVALUATION.md` is independently satisfied.

@@ -1,6 +1,12 @@
 # Document Systems
 
-Document Systems is a proposal-scoped Codex and ChatGPT plugin for composing,
+> **Experimental — not submitted to the OpenAI Plugins Directory.**
+> Document Systems is a public research prototype with verified engineering
+> properties and unproven product utility. Do not treat its validation receipts
+> or release gates as evidence that a document is correct, fit for use, or safer
+> than an ordinary review.
+
+Document Systems is a proposal-scoped Codex plugin prototype for composing,
 validating, gating, packaging, auditing, and rendering consequential documents
 from a small semantic model. It is published as a Banks Inc. service publication at
 [documents.banksinc.us](https://documents.banksinc.us).
@@ -105,18 +111,21 @@ npm run benchmark:real-world
 ```
 
 See [Real-World Benchmark v0.2](docs/REAL-WORLD-BENCHMARK.md) for the measured
-structural and semantic-defect detection, payload reduction, and remaining
-source-truth boundary.
+self-authored structural and semantic-defect detection, payload reduction, and
+why those results do not establish marginal product value.
 
-See [Production Readiness v0.3](docs/PRODUCTION-READINESS.md) for the live
-zero-mutation World Control Plane proof and exact remaining non-claims.
+See [Experimental Evaluation v0.3](docs/EXPERIMENTAL-EVALUATION.md) for the
+World Control Plane failure that caused the production claim to be withdrawn
+and the evidence required before reconsidering public submission.
 
 ## Distribution status
 
-This repository is a public GitHub marketplace for Codex and contains the
-production HTTPS MCP transport, public policy pages, reviewer test cases, and
-submission materials for the universal ChatGPT and Codex Plugins Directory.
-Directory availability remains subject to OpenAI review and publisher release.
+This repository is a public GitHub marketplace for Codex and contains a public
+experimental HTTPS MCP transport, policy pages, test cases, and dormant
+submission materials. The plugin has **not** been submitted to OpenAI for
+review. Banks Inc. will not submit or publish it in the universal Plugins
+Directory unless a blinded baseline-versus-candidate evaluation demonstrates
+repeatable marginal value.
 
 ## License
 

@@ -3,8 +3,8 @@
   "schema_version": 1,
   "app_info": {
     "display_name": "Document Systems",
-    "subtitle": "Govern document proposals",
-    "description": "Document Systems helps users compose deterministic proposal Expressions, validate structural and caller-reviewed semantic invariants, inspect supplied lineage, and compile portable traceable release packets. It never persists results or treats generated work as accepted, authoritative, or operative.",
+    "subtitle": "Experimental document proposal tools",
+    "description": "Dormant submission draft for an experimental research prototype. Document Systems composes deterministic proposal Expressions, checks structural and caller-supplied semantic invariants, inspects supplied lineage, and compiles portable traceable packets. Product utility over ordinary review is unproven. It never persists results or treats generated work as correct, accepted, authoritative, or operative.",
     "category": "PRODUCTIVITY"
   },
   "tools": {

@@ -2,13 +2,15 @@
 
 ## Decision
 
-**Document Systems v0.3 meets the bounded production gate established by v0.1:
-all seeded structural and semantic defects are blocked, and the compact
-one-call path reduces pipeline payload by 75.78 percent.**
+**This benchmark establishes deterministic behavior against four self-authored
+fixtures. It does not establish production readiness or marginal value over
+ordinary review. The earlier production conclusion is withdrawn.**
 
-This establishes value as a deterministic release gate when a caller can supply
-reviewed semantic invariants. It still does not establish general document
-intelligence or independent source truth.
+All seeded structural and semantic defects are blocked, and the compact
+one-call path reduces pipeline payload by 75.78 percent. Those are engineering
+measurements. The fixtures, assertions, seeded defects, and evaluator were
+created within the same development process, so they are not a blinded or
+independent product test.
 
 ## Question
 
@@ -114,9 +116,9 @@ with v0.1. It accepts the semantic input once and omits the artifact body from
 the default summary while retaining its view ID and content digest. Callers can
 request an artifact or a FULL portable packet when needed.
 
-## Production interpretation
+## Experimental interpretation
 
-### Appropriate
+### Engineering capabilities demonstrated
 
 - Consequential workflows where exact values, state transitions, authority
   allocation, exceptions, or evidence status must fail closed.
@@ -124,7 +126,7 @@ request an artifact or a FULL portable packet when needed.
 - Machine-contract handoffs where the caller can derive exact assertions from
   versioned source objects.
 
-### Still inappropriate
+### Uses not justified by this benchmark
 
 - Independent legal, medical, scientific, or factual verification.
 - Low-consequence notes and summaries that do not reuse packet identities or
@@ -133,6 +135,8 @@ request an artifact or a FULL portable packet when needed.
   assertions.
 - Any use that treats `READY_FOR_HUMAN_DECISION` as approval, acceptance,
   deployment, or execution.
+- Any claim that the MCP catches consequential defects better, faster, or more
+  cheaply than an ordinary model or human review.
 
 ## Gate outcome
 
@@ -143,6 +147,8 @@ The v0.1 next-experiment requirements are met:
 - payload reduction: **75.78 percent**, exceeding the 75 percent threshold;
 - clean-case determinism and fail-closed rendering: **no regression observed**.
 
-This supports the decision **production-ready for bounded, assertion-backed
-release gating**. Product-market fit, willingness to pay, external source
-truth, legal correctness, and universal document coverage remain unestablished.
+These results support continued experimentation with deterministic,
+assertion-backed packet processing. They do **not** support a production-ready
+claim. A subsequent World Control Plane use case passed the Document Systems
+gate while missing a consequential underground-placement defect; see
+[Experimental Evaluation v0.3](EXPERIMENTAL-EVALUATION.md).

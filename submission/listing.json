@@ -2,8 +2,8 @@
   "package_name": "document-systems",
   "version": "0.3.0",
   "display_name": "Document Systems",
-  "short_description": "Govern document proposals",
-  "long_description": "Document Systems composes deterministic proposal Expressions, enforces caller-reviewed semantic invariants, validates supplied lineage, and compiles portable content-addressed release packets. Four bounded profiles cover normative, operational, research, and human-agent documents. Every result remains proposal-scoped and not persisted by the service; validation never claims source truth, authority, behavioral success, acceptance, operative status, repository head, or complete lineage.",
+  "short_description": "Experimental document proposal tools",
+  "long_description": "Experimental research prototype for deterministic proposal Expressions, caller-supplied semantic invariants, supplied-lineage checks, and portable content-addressed packets. Product utility over ordinary review is unproven. Every result remains proposal-scoped and not persisted by the service; validation never claims source truth, authority, behavioral success, acceptance, operative status, repository head, or complete lineage.",
   "developer_name": "Banks Inc.",
   "category": "PRODUCTIVITY",
   "capabilities": [
@@ -30,5 +30,5 @@
     "parent_domain": "banksinc.us",
     "publication": "Document Systems"
   },
-  "release_notes": "Document Systems 0.3.0 adds caller-reviewed semantic assertions, mandatory typed allocation and evaluation fields, a one-call release-packet compiler, portable packet verification, and fail-closed semantic release gates. The public MCP remains stateless, read-only, and unauthenticated."
+  "release_notes": "Dormant draft only; not submitted for OpenAI review. Document Systems 0.3.0 is an experimental, value-unproven research prototype. The public MCP remains stateless, read-only, and unauthenticated."
 }

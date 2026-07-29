@@ -11,6 +11,8 @@ export default function handler(_request, response) {
     service: "document-systems",
     publisher: "Banks Inc.",
     version: "0.3.0",
+    maturity: "experimental",
+    directory_submission: "not_submitted",
     tools: 6,
     persistence: "none",
   }));
