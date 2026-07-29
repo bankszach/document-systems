@@ -1,18 +1,20 @@
 # Document Systems
 
 Document Systems is a proposal-scoped Codex and ChatGPT plugin for composing,
-validating, auditing, and rendering consequential documents from a small
-semantic model. It is published as a Banks Inc. service publication at
+validating, gating, packaging, auditing, and rendering consequential documents
+from a small semantic model. It is published as a Banks Inc. service publication at
 [documents.banksinc.us](https://documents.banksinc.us).
 
-It packages three skills and a stateless MCP server. The server writes nothing,
+It packages four skills and a stateless MCP server. The server writes nothing,
 accepts nothing, and cannot make a document authoritative or operative.
 
 ## Capabilities
 
 - Compose immutable, content-addressed document Expressions.
 - Validate structure, profile conformance, evidence references, status
-  separation, and supplied lineage.
+  separation, caller-reviewed semantic invariants, and supplied lineage.
+- Compile one-call release summaries or portable content-addressed packets.
+- Verify a portable packet after caller-managed storage or transfer.
 - Render traceable human-review, human-action, or machine projections.
 - Audit authority, exceptions, evidence, readiness, and acceptance boundaries.
 
@@ -56,6 +58,8 @@ The plugin requires Node.js and uses no third-party runtime packages.
 | `compose_document_expression` | Normalize explicit semantic inputs into a deterministic proposal Expression. |
 | `validate_document_expression` | Return a scoped structural receipt for an Expression and supplied lineage. |
 | `render_document_view` | Render a bounded, traceable projection without writing an artifact. |
+| `compile_document_packet` | Compose, validate, semantically gate, and render in one call; return a summary or portable packet. |
+| `verify_document_packet` | Recompute a portable packet's identity, receipt, view, and release gate. |
 
 All tools advertise `readOnlyHint: true`, `openWorldHint: false`, and
 `destructiveHint: false`, and each declares an output schema.
@@ -69,7 +73,8 @@ https://documents.banksinc.us/mcp
 ## Safety boundary
 
 An Expression is always `PROPOSED`. Validation can establish structural
-properties of supplied data, but it does not establish:
+properties and conformance to caller-reviewed semantic assertions, but it does
+not independently establish:
 
 - source truth or source authority;
 - behavioral success or intended-use fitness;
@@ -77,7 +82,9 @@ properties of supplied data, but it does not establish:
 - repository head or complete lineage;
 - persistence of returned objects.
 
-Every returned object declares `persistence_status: NOT_PERSISTED`.
+Every returned object declares `persistence_status: NOT_PERSISTED`. A FULL
+release packet is portable and content-addressed so a caller can store and
+later verify it; the service itself does not store or resolve packets.
 
 ## Validate
 
@@ -88,7 +95,8 @@ npm test
 The test suite exercises deterministic composition, content tampering,
 profile drift, supplied lineage, evidence laundering, lifecycle contamination,
 profile overcomposition, fail-closed action rendering, HTML escaping,
-element-level traceability, and the no-write boundary.
+element-level traceability, semantic drift, typed allocation completeness,
+portable-packet verification, and the no-write boundary.
 
 Run the external OSHA, CISA, CDC, and NIST benchmark:
 
@@ -96,9 +104,12 @@ Run the external OSHA, CISA, CDC, and NIST benchmark:
 npm run benchmark:real-world
 ```
 
-See [Real-World Benchmark v0.1](docs/REAL-WORLD-BENCHMARK.md) for the measured
-structural-defect detection, semantic misses, and payload overhead. The current
-decision is situational value, not general document intelligence.
+See [Real-World Benchmark v0.2](docs/REAL-WORLD-BENCHMARK.md) for the measured
+structural and semantic-defect detection, payload reduction, and remaining
+source-truth boundary.
+
+See [Production Readiness v0.3](docs/PRODUCTION-READINESS.md) for the live
+zero-mutation World Control Plane proof and exact remaining non-claims.
 
 ## Distribution status
 

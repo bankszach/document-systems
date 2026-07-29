@@ -587,6 +587,25 @@ function retained(expression, assertion) {
   throw new Error(`Unknown assertion comparison ${comparison}.`);
 }
 
+function withSemanticAssertions(benchmarkCase, args) {
+  return {
+    ...clone(args),
+    semantic_assertions: benchmarkCase.assertions.map(
+      ([elementId, field, comparison, expected], index) => ({
+        assertion_id:
+          `ASSERT-${benchmarkCase.id}-${index + 1}`
+            .toUpperCase()
+            .replace(/[^A-Z0-9_-]/g, "-"),
+        element_ref: elementId,
+        field,
+        operator: comparison === "equals" ? "EQUALS" : "INCLUDES",
+        expected,
+        source_refs: args.source_refs.map((item) => item.source_id),
+      }),
+    ),
+  };
+}
+
 async function callTool(name, args) {
   requestId += 1;
   const request = {
@@ -616,39 +635,32 @@ const cleanResults = [];
 const defectResults = [];
 
 for (const benchmarkCase of cases) {
-  const firstCompose = await callTool(
-    "compose_document_expression",
-    clone(benchmarkCase.args),
-  );
-  const secondCompose = await callTool(
-    "compose_document_expression",
-    clone(benchmarkCase.args),
-  );
-  const envelope = firstCompose.structured;
-  const validation = await callTool("validate_document_expression", {
-    envelope,
-    supplied_lineage: [],
-  });
-  const viewType = benchmarkCase.profile === "research" ? "HUMAN_REVIEW" : "HUMAN_ACTION";
-  const rendering = await callTool("render_document_view", {
-    envelope,
-    view_type: viewType,
+  const compileArgs = {
+    ...withSemanticAssertions(benchmarkCase, benchmarkCase.args),
+    response_mode: "SUMMARY",
+    view_type:
+      benchmarkCase.profile === "research" ? "HUMAN_REVIEW" : "HUMAN_ACTION",
     format: "MARKDOWN",
     audience: "Independent benchmark reviewer",
     supplied_lineage: [],
-  });
+  };
+  const firstCompile = await callTool(
+    "compile_document_packet",
+    compileArgs,
+  );
+  const secondCompile = await callTool(
+    "compile_document_packet",
+    clone(compileArgs),
+  );
+  const packet = firstCompile.structured;
   const assertions = benchmarkCase.assertions.map((assertion) => ({
     element_id: assertion[0],
     field: assertion[1],
-    passed: retained(envelope.expression, assertion),
+    passed:
+      packet.validation.semantic_assertions.status === "PASS",
   }));
-  const requestBytes =
-    byteCount(firstCompose.args) + byteCount(validation.args) + byteCount(rendering.args);
-  const responseBytes =
-    byteCount(envelope) + byteCount(validation.structured) + byteCount(rendering.structured);
-  const composeBytes = byteCount(firstCompose.args) + byteCount(envelope);
-  const validationBytes = byteCount(validation.args) + byteCount(validation.structured);
-  const renderingBytes = byteCount(rendering.args) + byteCount(rendering.structured);
+  const requestBytes = byteCount(firstCompile.args);
+  const responseBytes = byteCount(packet);
   const pipelineBytes = requestBytes + responseBytes;
   const baselineBytes = byteCount(benchmarkCase.baseline);
 
@@ -658,11 +670,14 @@ for (const benchmarkCase of cases) {
     source: benchmarkCase.source,
     profile: benchmarkCase.profile,
     deterministic:
-      envelope.expression_id === secondCompose.structured.expression_id,
-    expression_id: envelope.expression_id,
-    validation_result: validation.structured.result,
-    readiness_ok: validation.structured.readiness_ok,
-    render_status: rendering.structured.status,
+      packet.packet_id === secondCompile.structured.packet_id,
+    expression_id: packet.expression_id,
+    packet_id: packet.packet_id,
+    validation_result: packet.validation.result,
+    readiness_ok: packet.validation.readiness_ok,
+    semantic_ok: packet.validation.semantic_ok,
+    render_status: packet.view.status,
+    release_gate: packet.release_gate.status,
     critical_fact_retention: {
       passed: assertions.filter((assertion) => assertion.passed).length,
       total: assertions.length,
@@ -671,12 +686,8 @@ for (const benchmarkCase of cases) {
     payload: {
       baseline_bytes: baselineBytes,
       baseline_token_proxy: tokenProxy(benchmarkCase.baseline),
-      compose_bytes: composeBytes,
-      compose_token_proxy: Math.ceil(composeBytes / 4),
-      validation_bytes: validationBytes,
-      validation_token_proxy: Math.ceil(validationBytes / 4),
-      rendering_bytes: renderingBytes,
-      rendering_token_proxy: Math.ceil(renderingBytes / 4),
+      compile_request_bytes: requestBytes,
+      compile_response_bytes: responseBytes,
       pipeline_request_bytes: requestBytes,
       pipeline_response_bytes: responseBytes,
       pipeline_bytes: pipelineBytes,
@@ -686,32 +697,36 @@ for (const benchmarkCase of cases) {
   });
 
   for (const defect of benchmarkCase.defects) {
-    const defectCompose = await callTool(
-      "compose_document_expression",
-      mutate(benchmarkCase.args, defect.operations),
+    const defectPacket = await callTool(
+      "compile_document_packet",
+      {
+        ...withSemanticAssertions(
+          benchmarkCase,
+          mutate(benchmarkCase.args, defect.operations),
+        ),
+        response_mode: "SUMMARY",
+        view_type: "HUMAN_ACTION",
+        format: "MARKDOWN",
+        audience: "Independent benchmark reviewer",
+        supplied_lineage: [],
+      },
     );
-    const defectValidation = await callTool("validate_document_expression", {
-      envelope: defectCompose.structured,
-      supplied_lineage: [],
-    });
-    const defectRendering = await callTool("render_document_view", {
-      envelope: defectCompose.structured,
-      view_type: "HUMAN_ACTION",
-      format: "MARKDOWN",
-      audience: "Independent benchmark reviewer",
-      supplied_lineage: [],
-    });
-    const receipt = defectValidation.structured;
+    const receipt = defectPacket.structured.validation;
     defectResults.push({
       case_id: benchmarkCase.id,
       trial_id: defect.id,
       defect_class: defect.class,
       description: defect.description,
-      detected: receipt.result !== "PASS" || receipt.readiness_ok !== true,
+      detected:
+        defectPacket.structured.release_gate.status === "BLOCKED" ||
+        receipt.result !== "PASS" ||
+        receipt.semantic_ok !== true,
       validation_result: receipt.result,
       readiness_ok: receipt.readiness_ok,
-      action_render_status: defectRendering.structured.status,
-      check_ids: receipt.checks.map((check) => check.check_id),
+      semantic_ok: receipt.semantic_ok,
+      action_render_status: defectPacket.structured.view.status,
+      release_gate: defectPacket.structured.release_gate.status,
+      check_ids: receipt.blocking_checks.map((check) => check.check_id),
     });
   }
 }
@@ -728,7 +743,7 @@ const pipelineBytes = cleanResults.reduce(
 );
 
 const result = {
-  schema: "document-systems/real-world-benchmark-result@0.1",
+  schema: "document-systems/real-world-benchmark-result@0.2",
   endpoint,
   methodology: {
     question:
@@ -738,8 +753,8 @@ const result = {
     token_proxy:
       "ceil(UTF-8 bytes / 4); deterministic comparison proxy, not billing tokens.",
     limitations: [
-      "The caller still performs source research and semantic extraction.",
-      "Fact-retention checks test supplied-input normalization, not interpretation accuracy.",
+      "The caller still performs source research, semantic extraction, and assertion authoring.",
+      "Semantic assertion checks prove agreement with supplied reviewed invariants, not independent source truth.",
       "Payload counts omit tool schemas and therefore understate overhead.",
       "Four bounded cases do not establish universal fitness.",
     ],
@@ -750,7 +765,9 @@ const result = {
         item.deterministic &&
         item.validation_result === "PASS" &&
         item.readiness_ok &&
+        item.semantic_ok &&
         item.render_status === "RENDERED" &&
+        item.release_gate === "READY_FOR_HUMAN_DECISION" &&
         item.critical_fact_retention.passed === item.critical_fact_retention.total,
     ).length,
     total: cleanResults.length,

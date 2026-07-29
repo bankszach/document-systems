@@ -29,8 +29,8 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 if (manifest.name !== entry.name || manifest.name !== "document-systems") {
   throw new Error("Marketplace and manifest plugin names differ.");
 }
-if (manifest.version !== "0.2.0") {
-  throw new Error("The release manifest must use version 0.2.0.");
+if (manifest.version !== "0.3.0") {
+  throw new Error("The release manifest must use version 0.3.0.");
 }
 if (manifest.license !== "MIT") {
   throw new Error("The release manifest must declare the repository license.");
@@ -75,11 +75,11 @@ const submission = JSON.parse(
   fs.readFileSync(path.join(repositoryRoot, "chatgpt-app-submission.json"), "utf8"),
 );
 if (
-  Object.keys(submission.tools ?? {}).length !== 4 ||
-  submission.test_cases?.length !== 5 ||
+  Object.keys(submission.tools ?? {}).length !== 6 ||
+  submission.test_cases?.length !== 7 ||
   submission.negative_test_cases?.length !== 3
 ) {
-  throw new Error("Submission package must cover four tools and exactly 5 positive plus 3 negative tests.");
+  throw new Error("Submission package must cover six tools and exactly 7 positive plus 3 negative tests.");
 }
 for (const [name, tool] of Object.entries(submission.tools)) {
   const annotations = tool.annotations ?? {};

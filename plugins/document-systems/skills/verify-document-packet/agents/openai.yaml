@@ -1,0 +1,12 @@
+interface:
+  display_name: "Verify Document Packet"
+  short_description: "Verify portable release packet integrity"
+  default_prompt: "Use $verify-document-packet to verify this portable Document Systems release packet."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "documentSystems"
+      description: "Deterministic portable packet verification tool."
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true

@@ -14,7 +14,9 @@ replacement for its immutable semantic source.
    an unstructured need, use `compose-document-system` first.
 2. Name the stakeholder and concern.
 3. Call `validate_document_expression`.
-4. Stop on integrity errors. Warnings may remain visible in a draft view.
+4. Stop on integrity errors. For a consequential `HUMAN_ACTION` view, also stop
+   when semantic assertions are absent or fail; warnings may remain visible in
+   a draft `HUMAN_REVIEW` view.
 5. Select one view:
    - `HUMAN_REVIEW`: full proposal with epistemic labels and limitations;
    - `HUMAN_ACTION`: action-relevant authority, roles, states, transitions,

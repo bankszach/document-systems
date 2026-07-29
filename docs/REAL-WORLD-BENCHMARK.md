@@ -1,15 +1,14 @@
-# Real-World Benchmark v0.1
+# Real-World Benchmark v0.2
 
 ## Decision
 
-**Document Systems has situational value as a deterministic structural gate,
-but the current three-call interface is too payload-heavy for ordinary document
-work and does not detect semantic falsity.**
+**Document Systems v0.3 meets the bounded production gate established by v0.1:
+all seeded structural and semantic defects are blocked, and the compact
+one-call path reduces pipeline payload by 75.78 percent.**
 
-Do not position v0.2 as general document intelligence. Use it where missing
-roles, exceptions, evidence support, typed references, or fail-closed action
-rendering justify substantial overhead. For summaries, notes, and low-stakes
-one-off documents, a flat document is more efficient.
+This establishes value as a deterministic release gate when a caller can supply
+reviewed semantic invariants. It still does not establish general document
+intelligence or independent source truth.
 
 ## Question
 
@@ -21,21 +20,14 @@ model-visible payload overhead?
 The benchmark uses four official sources outside Banks Inc.:
 
 1. **Normative:** OSHA
-   [29 CFR 1910.38](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.38),
-   including the written-plan rule, small-employer oral exception, minimum plan
-   elements, alarms, training, and employee review.
+   [29 CFR 1910.38](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.38).
 2. **Operational:** CISA
-   [Federal Government Cybersecurity Incident and Vulnerability Response Playbooks](https://www.cisa.gov/sites/default/files/publications/Cybersecurity_Incident_Vulnerability_Response_Playbooks_508C.pdf),
-   including the major-incident applicability boundary and incident lifecycle.
+   [Federal Government Cybersecurity Incident and Vulnerability Response Playbooks](https://www.cisa.gov/sites/default/files/publications/Cybersecurity_Incident_Vulnerability_Response_Playbooks_508C.pdf).
 3. **Research:** CDC
-   [Measles Update - United States, January 1-April 17, 2025](https://www.cdc.gov/mmwr/volumes/74/wr/mm7414a1.htm),
-   including reported counts, outbreak association, severe outcomes, and
-   limitations.
+   [Measles Update - United States, January 1-April 17, 2025](https://www.cdc.gov/mmwr/volumes/74/wr/mm7414a1.htm).
 4. **Human-agent:** NIST
    [AI RMF Core](https://airc.nist.gov/airmf-resources/airmf/5-sec-core/) and
-   [Appendix C](https://airc.nist.gov/airmf-resources/airmf/appendices/app-c-ai-risk-management-and-human-ai-interaction/),
-   including executive authority, differentiated human-AI roles, oversight,
-   and joint evaluation.
+   [Appendix C](https://airc.nist.gov/airmf-resources/airmf/appendices/app-c-ai-risk-management-and-human-ai-interaction/).
 
 The CISA PDF was inspected as rendered pages as well as extracted text. Source
 facts are bounded paraphrases; the repository does not republish the source
@@ -47,20 +39,19 @@ For each source:
 
 1. A caller extracted a bounded set of critical facts.
 2. The same facts were represented as a concise flat Markdown baseline.
-3. The production MCP at `https://documents.banksinc.us/mcp` composed,
-   validated, and rendered a profile-specific Expression.
-4. Composition ran twice to test deterministic identity.
-5. Three critical-fact assertions tested normalization retention.
+3. Each consequential value or transition became a semantic assertion citing a
+   supplied SourceRef marked `REVIEWED_BY_CALLER`.
+4. `compile_document_packet` composed, validated, gated, and rendered the
+   document in one call with `response_mode=SUMMARY`.
+5. Compilation ran twice to test deterministic packet identity.
 6. One structural and one semantic defect were seeded through a fresh
    composition so each mutated Expression had a valid digest.
-7. Each defect was validated and sent to `HUMAN_ACTION` rendering to test the
-   fail-closed behavior.
+7. A defect counted as detected when validation failed, semantic conformance
+   failed, or the release gate blocked.
 
-Payload is measured as exact UTF-8 bytes across caller arguments and structured
-tool results for compose, validate, and render. The token proxy is
-`ceil(bytes / 4)`. It is a deterministic comparison aid, not an OpenAI
-billing-token count. Tool schemas are omitted, so the reported overhead is a
-lower bound.
+Payload is exact UTF-8 bytes across the compile arguments and compact result.
+The token proxy is `ceil(bytes / 4)`, a deterministic comparison aid rather than
+an OpenAI billing-token count. Tool schemas are omitted.
 
 Run:
 
@@ -80,98 +71,78 @@ DOCUMENT_SYSTEMS_MCP_URL=https://example.test/mcp npm run benchmark:real-world
 
 | Measure | Result |
 | --- | ---: |
-| Deterministic, structurally passing, rendered cases | 4 / 4 |
-| Supplied critical-fact assertions retained | 12 / 12 |
+| Deterministic, passing, release-ready cases | 4 / 4 |
+| Supplied critical assertions passed | 12 / 12 |
 | Profiles exercised | 4 / 4 |
 
-These results establish deterministic normalization and projection of supplied
-facts. They do not establish correct source interpretation because the caller,
-not the MCP, performed research and semantic extraction.
+These results establish deterministic conformance to supplied reviewed
+invariants. The caller still performs research, interpretation, and assertion
+authoring.
 
 ### Seeded defects
 
-| Case | Defect | Class | Detected | Human-action view |
+| Case | Defect | Class | Detected | Release gate |
 | --- | --- | --- | --- | --- |
 | OSHA | Missing small-employer exception | Structural | Yes | Blocked |
-| OSHA | Threshold changed from 10 to 100 employees | Semantic | No | Rendered |
+| OSHA | Threshold changed from 10 to 100 employees | Semantic | Yes | Blocked |
 | CISA | Transition points to a missing state | Structural | Yes | Blocked |
-| CISA | Analysis-to-containment transition reversed | Semantic | No | Rendered |
+| CISA | Analysis-to-containment transition reversed | Semantic | Yes | Blocked |
 | CDC | `OBSERVED` claims retain only reference-only support | Structural | Yes | Blocked |
-| CDC | Reported case count changed from 800 to 8,000 | Semantic | No | Rendered |
+| CDC | Reported case count changed from 800 to 8,000 | Semantic | Yes | Blocked |
 | NIST | Evaluation criterion removed | Structural | Yes | Blocked |
-| NIST | Allocation party and type removed | Semantic | No | Rendered |
+| NIST | Allocation party and type removed | Semantic | Yes | Blocked |
 
-Summary:
+| Measure | v0.1 | v0.2 |
+| --- | ---: | ---: |
+| Structural defects detected | 4 / 4 | 4 / 4 |
+| Semantic defects detected | 0 / 4 | 4 / 4 |
+| Semantic defects blocked | 0 / 4 | 4 / 4 |
 
-| Measure | Result |
-| --- | ---: |
-| Structural defects detected | 4 / 4 |
-| Structural defects blocked from action rendering | 4 / 4 |
-| Semantic defects detected | 0 / 4 |
-| Semantic defects blocked from action rendering | 0 / 4 |
-
-The structural result is meaningful: the system caught missing profile
-elements, broken references, and evidence-status laundering, then blocked
-action views. The semantic result is equally meaningful: valid structure can
-carry a false number, incorrect threshold, reversed workflow, or incomplete
-allocation semantics and still receive `PASS`.
+The semantic improvement comes from explicit caller-reviewed assertions and
+mandatory typed allocation fields. It is not autonomous fact checking.
 
 ### Payload
 
-| Measure | Flat baseline | MCP pipeline |
-| --- | ---: | ---: |
-| UTF-8 bytes | 1,346 | 81,874 |
-| Token proxy | 337 | 20,469 |
-| Aggregate ratio | 1.00x | 60.83x |
+| Measure | Flat baseline | v0.1 three-call | v0.2 compact compile |
+| --- | ---: | ---: | ---: |
+| UTF-8 bytes | 1,346 | 81,874 | 19,832 |
+| Token proxy | 337 | 20,469 | 4,958 |
+| Ratio to flat baseline | 1.00x | 60.83x | 14.73x |
 
-Per-case pipeline ratios ranged from 57.27x to 63.64x. The main cause is
-repetition of the complete Expression in compose output, validation input,
-render input, receipts, and manifests.
+The compact path reduces measured pipeline bytes by **75.78 percent** compared
+with v0.1. It accepts the semantic input once and omits the artifact body from
+the default summary while retaining its view ID and content digest. Callers can
+request an artifact or a FULL portable packet when needed.
 
-## Interpretation
+## Production interpretation
 
-### Where it earns its cost
+### Appropriate
 
-- Consequential workflows where a missing role, exception, state, or reference
-  can create an unsafe action.
-- Research packets where `OBSERVED` claims must not silently rely on
-  reference-only evidence.
-- Controlled publishing or operations where an action view must fail closed on
-  structural unreadiness.
-- Systems that persist or cache the Expression and receipts outside the model
-  context and reuse them across many decisions.
+- Consequential workflows where exact values, state transitions, authority
+  allocation, exceptions, or evidence status must fail closed.
+- Release and audit packets that reuse content identities, receipts, and views.
+- Machine-contract handoffs where the caller can derive exact assertions from
+  versioned source objects.
 
-### Where it is mostly ceremony
+### Still inappropriate
 
-- Ordinary summaries, meeting notes, prose drafts, and one-off checklists.
-- Work where source truth is the primary risk, because v0.2 does not retrieve or
-  compare source content.
-- Work where the full compose-validate-render exchange occurs inside a model
-  context for every interaction.
-- Work where nobody consumes element IDs, lineage, receipts, or alternate
-  projections after generation.
+- Independent legal, medical, scientific, or factual verification.
+- Low-consequence notes and summaries that do not reuse packet identities or
+  gates.
+- Work where the caller cannot provide trustworthy source extraction or
+  assertions.
+- Any use that treats `READY_FOR_HUMAN_DECISION` as approval, acceptance,
+  deployment, or execution.
 
-## Required next experiment
+## Gate outcome
 
-Before promoting the system as broadly valuable:
+The v0.1 next-experiment requirements are met:
 
-1. Add a composite compile tool that accepts semantic inputs once and returns a
-   compact receipt plus requested view, avoiding repeated envelopes.
-2. Return compact model-visible summaries and move full manifests to a
-   non-model payload or retrievable artifact where the host supports it.
-3. Require `allocation_party` and `allocation_type` on
-   `HUMAN_AGENT_ALLOCATION`.
-4. Allow callers to supply semantic invariants such as permitted state
-   transitions and numeric/source assertions.
-5. Repeat this benchmark and require:
-   - 4 / 4 structural detection;
-   - at least 3 / 4 detection or explicit blocking of the seeded semantic
-     defects;
-   - at least a 75 percent reduction in pipeline bytes;
-   - no regression in determinism or fail-closed rendering.
+- structural detection: **4 / 4**;
+- semantic detection or blocking: **4 / 4**, exceeding the 3 / 4 threshold;
+- payload reduction: **75.78 percent**, exceeding the 75 percent threshold;
+- clean-case determinism and fail-closed rendering: **no regression observed**.
 
-## Boundary
-
-This benchmark supports the decision **situational value, current interface
-inefficient**. It does not establish product-market fit, user willingness to
-pay, source truth, legal correctness, or universal document coverage.
+This supports the decision **production-ready for bounded, assertion-backed
+release gating**. Product-market fit, willingness to pay, external source
+truth, legal correctness, and universal document coverage remain unestablished.

@@ -1,7 +1,7 @@
 {
   "name": "document-systems",
-  "version": "0.2.0",
-  "description": "Compose, validate, audit, and render content-addressed document-system proposals without persisting or accepting them.",
+  "version": "0.3.0",
+  "description": "Compile, validate, gate, render, and verify content-addressed document-system proposals without accepting or executing them.",
   "author": {
     "name": "Banks Inc.",
     "url": "https://banksinc.us"
@@ -20,19 +20,20 @@
   "interface": {
     "displayName": "Document Systems",
     "shortDescription": "Governed document models, validation, and views",
-    "longDescription": "Build immutable proposal Expressions from four bounded document profiles, validate structural and evidence boundaries, and render traceable stakeholder views. The plugin writes nothing and cannot make a document operative or accepted.",
+    "longDescription": "Build immutable proposal Expressions from four bounded document profiles, enforce caller-reviewed semantic invariants, compile portable release packets, and render traceable stakeholder views. The plugin writes nothing and cannot make a document operative or accepted.",
     "developerName": "Banks Inc.",
     "category": "Productivity",
     "capabilities": [
       "Content-addressed document modeling",
-      "Structural and lineage validation",
+      "Structural, semantic-invariant, and lineage validation",
+      "Portable release-packet compilation and verification",
       "Traceable stakeholder view rendering"
     ],
     "websiteURL": "https://documents.banksinc.us",
     "defaultPrompt": [
       "Model this document need as a proposal-scoped Expression.",
-      "Audit this Expression's integrity, lineage, and evidence boundaries.",
-      "Render a human-review or human-action view from this Expression."
+      "Audit this Expression's integrity, semantic invariants, lineage, and evidence boundaries.",
+      "Compile a portable human-action release packet from this Expression."
     ]
   },
   "mcpServers": "./.mcp.json"
