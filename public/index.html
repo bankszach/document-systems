@@ -54,8 +54,15 @@
           <article class="card">
             <h2>Fail-closed action views</h2>
             <p>
-              Human-action rendering is blocked when required roles, states,
-              evidence gates, or exception routes are missing.
+              Human-action release is blocked when required roles, states,
+              evidence gates, semantic assertions, or exception routes fail.
+            </p>
+          </article>
+          <article class="card">
+            <h2>Portable release packets</h2>
+            <p>
+              One call returns a compact release gate or a FULL
+              content-addressed packet that callers can store and verify.
             </p>
           </article>
           <article class="card">
@@ -68,7 +75,7 @@
         </section>
         <p class="notice">
           The hosted MCP service is stateless and unauthenticated. It does not
-          intentionally persist document inputs or outputs.
+          intentionally persist inputs, outputs, or portable packets.
         </p>
       </main>
       <footer>

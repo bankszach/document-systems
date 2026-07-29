@@ -136,10 +136,28 @@ const completeOperationalInput = {
       exception_route_ref: "EXC-BLOCKED",
     },
   ],
+  semantic_assertions: [
+    {
+      assertion_id: "ASSERT-TRANSITION-FROM",
+      element_ref: "TRANS-RUN",
+      field: "from_state",
+      operator: "EQUALS",
+      expected: "STATE-READY",
+      source_refs: ["SRC-TEST"],
+    },
+    {
+      assertion_id: "ASSERT-TRANSITION-TO",
+      element_ref: "TRANS-RUN",
+      field: "to_state",
+      operator: "EQUALS",
+      expected: "STATE-DONE",
+      source_refs: ["SRC-TEST"],
+    },
+  ],
 };
 
 const toolList = rpc([{ method: "tools/list", params: {} }])[0].result.tools;
-assert(toolList.length === 4, "Expected four callable tools.");
+assert(toolList.length === 6, "Expected six callable tools.");
 assert(
   toolList.every((tool) =>
     tool.annotations.readOnlyHint === true &&
@@ -442,6 +460,130 @@ assert(
   "Profile drift was not detected.",
 );
 
+// Probe 11: caller-reviewed semantic invariants detect valid-shape drift.
+const semanticDriftEnvelope = structured(
+  call("compose_document_expression", {
+    ...completeOperationalInput,
+    elements: completeOperationalInput.elements.map((element) =>
+      element.element_id === "TRANS-RUN"
+        ? {
+          ...element,
+          from_state: "STATE-DONE",
+          to_state: "STATE-READY",
+        }
+        : element
+    ),
+  }),
+);
+const semanticDrift = structured(
+  call("validate_document_expression", {
+    envelope: semanticDriftEnvelope,
+  }),
+);
+const semanticDriftView = structured(
+  call("render_document_view", {
+    envelope: semanticDriftEnvelope,
+    view_type: "HUMAN_ACTION",
+  }),
+);
+assert(
+  semanticDrift.semantic_ok === false &&
+  semanticDrift.checks.some(
+    (item) => item.check_id === "SEMANTIC_ASSERTION_FAILED",
+  ) &&
+  semanticDriftView.status === "BLOCKED",
+  "Semantic assertion drift did not fail closed.",
+);
+
+// Probe 12: typed human-agent allocation cannot omit its party or type.
+const allocationEnvelope = structured(
+  call("compose_document_expression", {
+    work_id: "work:test:allocation",
+    title: "Allocation test",
+    purpose: "Prove typed allocation completeness.",
+    primary_profile: "human-agent",
+    source_refs: [source],
+    elements: [
+      {
+        element_id: "ROLE-HUMAN",
+        kind: "ROLE",
+        title: "Human",
+        statement: "Retains authority.",
+      },
+      {
+        element_id: "ALLOC-HUMAN",
+        kind: "HUMAN_AGENT_ALLOCATION",
+        title: "Human authority",
+        statement: "The human decides.",
+        owner_ref: "ROLE-HUMAN",
+      },
+      {
+        element_id: "EVAL-OUTCOME",
+        kind: "EVALUATION_CRITERION",
+        title: "Outcome",
+        statement: "Review the outcome.",
+        criterion: "Human review is recorded.",
+        owner_ref: "ROLE-HUMAN",
+      },
+      {
+        element_id: "EXC-UNCLEAR",
+        kind: "EXCEPTION",
+        title: "Unclear authority",
+        statement: "Stop for review.",
+        target_ref: "ROLE-HUMAN",
+      },
+    ],
+  }),
+);
+const allocationValidation = structured(
+  call("validate_document_expression", { envelope: allocationEnvelope }),
+);
+assert(
+  allocationValidation.checks.some(
+    (item) => item.check_id === "ALLOCATION_INCOMPLETE",
+  ),
+  "Incomplete human-agent allocation was not rejected.",
+);
+
+// Probe 13: the composite path is efficient, content-addressed, and verifiable.
+const summaryPacket = structured(
+  call("compile_document_packet", {
+    ...completeOperationalInput,
+    response_mode: "SUMMARY",
+    view_type: "HUMAN_ACTION",
+    audience: "Release operator",
+  }),
+);
+const fullPacket = structured(
+  call("compile_document_packet", {
+    ...completeOperationalInput,
+    response_mode: "FULL",
+    view_type: "HUMAN_ACTION",
+    audience: "Release operator",
+  }),
+);
+const packetVerification = structured(
+  call("verify_document_packet", { packet: fullPacket }),
+);
+const tamperedPacketVerification = structured(
+  call("verify_document_packet", {
+    packet: {
+      ...fullPacket,
+      release_gate: {
+        ...fullPacket.release_gate,
+        status: "BLOCKED",
+      },
+    },
+  }),
+);
+assert(
+  summaryPacket.packet_id === fullPacket.packet_id &&
+  summaryPacket.release_gate.status === "READY_FOR_HUMAN_DECISION" &&
+  packetVerification.valid === true &&
+  tamperedPacketVerification.valid === false,
+  "Portable release-packet compilation or verification failed.",
+);
+
 const afterState = treeState(pluginRoot);
 assert(
   JSON.stringify(beforeState) === JSON.stringify(afterState),
@@ -452,9 +594,12 @@ process.stdout.write(`${JSON.stringify({
   ok: true,
   tools: toolList.map((tool) => tool.name),
   profiles: profileCatalog.profiles.map((profile) => profile.profile_id),
-  probes_passed: 10,
+  probes_passed: 13,
   deterministic_expression_id: firstEnvelope.expression_id,
   valid_lineage: validLineage.lineage_result.status,
   blocked_action_view: blockedAction.status,
+  semantic_drift: semanticDrift.semantic_assertions.status,
+  release_gate: summaryPacket.release_gate.status,
+  packet_verification: packetVerification.valid,
   persistence_status: firstEnvelope.persistence_status,
 })}\n`);

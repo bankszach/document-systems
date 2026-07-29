@@ -10,6 +10,8 @@ export default function handler(_request, response) {
     status: "ok",
     service: "document-systems",
     publisher: "Banks Inc.",
+    version: "0.3.0",
+    tools: 6,
     persistence: "none",
   }));
 }

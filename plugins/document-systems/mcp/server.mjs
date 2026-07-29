@@ -5,14 +5,18 @@ import readline from "node:readline";
 import { fileURLToPath } from "node:url";
 
 const SERVER_NAME = "document-systems";
-const SERVER_VERSION = "0.2.0";
+const SERVER_VERSION = "0.3.0";
 const EXPRESSION_SCHEMA = "document-systems/expression@0.1";
 const RECEIPT_SCHEMA = "document-systems/validation-receipt@0.1";
 const MANIFEST_SCHEMA = "document-systems/view-manifest@0.1";
 const CATALOG_SCHEMA = "document-systems/profile-catalog@0.1";
+const PACKET_SCHEMA = "document-systems/release-packet@0.1";
+const PACKET_VERIFICATION_SCHEMA =
+  "document-systems/release-packet-verification@0.1";
 export const MAX_PAYLOAD_BYTES = 1_000_000;
 const MAX_ELEMENTS = 500;
 const MAX_SOURCES = 200;
+const MAX_ASSERTIONS = 500;
 const PROFILE_IDS = ["normative", "operational", "research", "human-agent"];
 const VIEW_TYPES = ["HUMAN_REVIEW", "HUMAN_ACTION", "MACHINE"];
 const FORMATS = ["MARKDOWN", "JSON"];
@@ -38,6 +42,21 @@ const EPISTEMIC_STATES = [
   "CONTRADICTED",
   "NOT_ESTABLISHED",
 ];
+const ASSERTION_OPERATORS = ["EQUALS", "INCLUDES"];
+const ASSERTION_FIELDS = new Set([
+  "statement",
+  "actor_ref",
+  "authority_ref",
+  "verification_ref",
+  "from_state",
+  "to_state",
+  "owner_ref",
+  "exception_route_ref",
+  "target_ref",
+  "criterion",
+  "allocation_party",
+  "allocation_type",
+]);
 const FORBIDDEN_KEYS = new Set([
   "accepted",
   "accepted_by",
@@ -78,6 +97,8 @@ const TOOL_NAMES = {
   composeExpression: "compose_document_expression",
   validateExpression: "validate_document_expression",
   renderView: "render_document_view",
+  compilePacket: "compile_document_packet",
+  verifyPacket: "verify_document_packet",
 };
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -455,6 +476,57 @@ function normalizeElement(value, index) {
   return normalized;
 }
 
+function normalizeSemanticAssertion(value, index) {
+  const name = `semantic_assertions[${index}]`;
+  const input = requireObject(value, name);
+  const allowedKeys = new Set([
+    "assertion_id",
+    "element_ref",
+    "field",
+    "operator",
+    "expected",
+    "source_refs",
+  ]);
+  for (const key of Object.keys(input)) {
+    if (!allowedKeys.has(key)) {
+      throw new Error(`${name}.${key} is not an allowed assertion field.`);
+    }
+  }
+  const assertionId = requireString(
+    input.assertion_id,
+    `${name}.assertion_id`,
+    100,
+  );
+  if (!/^ASSERT-[A-Z0-9][A-Z0-9_-]*$/.test(assertionId)) {
+    throw new Error(`${name}.assertion_id must use ASSERT-* syntax.`);
+  }
+  const field = requireString(input.field, `${name}.field`, 80);
+  if (!ASSERTION_FIELDS.has(field)) {
+    throw new Error(`${name}.field is not assertable.`);
+  }
+  if (!ASSERTION_OPERATORS.includes(input.operator)) {
+    throw new Error(
+      `${name}.operator must be one of: ${ASSERTION_OPERATORS.join(", ")}.`,
+    );
+  }
+  const sourceRefs = normalizeStringArray(
+    input.source_refs,
+    `${name}.source_refs`,
+    20,
+  );
+  if (sourceRefs.length === 0) {
+    throw new Error(`${name}.source_refs must identify supplied evidence.`);
+  }
+  return {
+    assertion_id: assertionId,
+    element_ref: requireString(input.element_ref, `${name}.element_ref`, 100),
+    field,
+    operator: input.operator,
+    expected: requireString(input.expected, `${name}.expected`, 4000),
+    source_refs: sourceRefs,
+  };
+}
+
 function normalizeInputs(args) {
   const input = requireObject(args, "arguments");
   const allowedInputKeys = new Set([
@@ -467,6 +539,7 @@ function normalizeInputs(args) {
     "non_goals",
     "source_refs",
     "elements",
+    "semantic_assertions",
     "parents",
     "generated_by",
     "generation_method",
@@ -484,6 +557,15 @@ function normalizeInputs(args) {
   }
   if (!Array.isArray(input.elements) || input.elements.length > MAX_ELEMENTS) {
     throw new Error(`elements must contain at most ${MAX_ELEMENTS} items.`);
+  }
+  const semanticAssertions = input.semantic_assertions ?? [];
+  if (
+    !Array.isArray(semanticAssertions) ||
+    semanticAssertions.length > MAX_ASSERTIONS
+  ) {
+    throw new Error(
+      `semantic_assertions must contain at most ${MAX_ASSERTIONS} items.`,
+    );
   }
   const parents = input.parents === undefined ? [] : input.parents;
   if (!Array.isArray(parents) || parents.length > 8) {
@@ -513,6 +595,11 @@ function normalizeInputs(args) {
     },
     source_refs: input.source_refs.map(normalizeSource),
     elements: input.elements.map(normalizeElement),
+    ...(semanticAssertions.length === 0
+      ? {}
+      : {
+        semantic_assertions: semanticAssertions.map(normalizeSemanticAssertion),
+      }),
     lineage: { parents: normalizedParents },
     provenance: {
       generated_by: {
@@ -768,6 +855,10 @@ function validateEnvelope(envelopeInput, suppliedEnvelopes = []) {
 
   const sources = Array.isArray(expression.source_refs) ? expression.source_refs : [];
   const elements = Array.isArray(expression.elements) ? expression.elements : [];
+  const assertions = expression.semantic_assertions === undefined
+    ? []
+    : expression.semantic_assertions;
+  const boundedAssertions = Array.isArray(assertions) ? assertions : [];
   if (!Array.isArray(expression.source_refs) || sources.length > MAX_SOURCES) {
     checks.push(check("FAIL", "ERROR", "SOURCE_COLLECTION", "source_refs is invalid.", {
       path: "$.expression.source_refs",
@@ -777,6 +868,15 @@ function validateEnvelope(envelopeInput, suppliedEnvelopes = []) {
     checks.push(check("FAIL", "ERROR", "ELEMENT_COLLECTION", "elements is invalid.", {
       path: "$.expression.elements",
     }));
+  }
+  if (!Array.isArray(assertions) || assertions.length > MAX_ASSERTIONS) {
+    checks.push(check(
+      "FAIL",
+      "ERROR",
+      "SEMANTIC_ASSERTION_COLLECTION",
+      "semantic_assertions is invalid.",
+      { path: "$.expression.semantic_assertions" },
+    ));
   }
   const sourceById = new Map();
   sources.forEach((source, index) => {
@@ -961,8 +1061,137 @@ function validateEnvelope(envelopeInput, suppliedEnvelopes = []) {
           { path: pathValue, element_refs: [element.element_id] },
         ));
       }
+      if (
+        element.from_state &&
+        element.to_state &&
+        element.from_state === element.to_state
+      ) {
+        checks.push(check(
+          "FAIL",
+          "ERROR",
+          "TRANSITION_SELF_LOOP",
+          "A transition must change state unless an explicit future profile permits a self-loop.",
+          { path: pathValue, element_refs: [element.element_id] },
+        ));
+      }
+    }
+    if (element.kind === "HUMAN_AGENT_ALLOCATION") {
+      const missing = [
+        "owner_ref",
+        "allocation_party",
+        "allocation_type",
+      ].filter((field) => !element[field]);
+      if (missing.length > 0) {
+        checks.push(check(
+          "FAIL",
+          "ERROR",
+          "ALLOCATION_INCOMPLETE",
+          `Human-agent allocation lacks ${missing.join(", ")}.`,
+          { path: pathValue, element_refs: [element.element_id] },
+        ));
+      }
+    }
+    if (element.kind === "EVALUATION_CRITERION") {
+      const missing = ["owner_ref", "criterion"].filter(
+        (field) => !element[field],
+      );
+      if (missing.length > 0) {
+        checks.push(check(
+          "FAIL",
+          "ERROR",
+          "EVALUATION_CRITERION_INCOMPLETE",
+          `Evaluation criterion lacks ${missing.join(", ")}.`,
+          { path: pathValue, element_refs: [element.element_id] },
+        ));
+      }
     }
   });
+
+  let assertionPassed = 0;
+  let assertionFailed = 0;
+  const assertionIds = new Set();
+  for (const [index, assertion] of boundedAssertions.entries()) {
+    const pathValue = `$.expression.semantic_assertions[${index}]`;
+    if (
+      !assertion?.assertion_id ||
+      assertionIds.has(assertion.assertion_id)
+    ) {
+      assertionFailed += 1;
+      checks.push(check(
+        "FAIL",
+        "ERROR",
+        "SEMANTIC_ASSERTION_ID",
+        "Semantic assertion IDs must be present and unique.",
+        { path: `${pathValue}.assertion_id` },
+      ));
+      continue;
+    }
+    assertionIds.add(assertion.assertion_id);
+    const element = elementById.get(assertion.element_ref);
+    if (!element || !ASSERTION_FIELDS.has(assertion.field)) {
+      assertionFailed += 1;
+      checks.push(check(
+        "FAIL",
+        "ERROR",
+        "SEMANTIC_ASSERTION_TARGET",
+        "Semantic assertion target or field is not present.",
+        {
+          path: pathValue,
+          element_refs: [assertion.element_ref].filter(Boolean),
+        },
+      ));
+      continue;
+    }
+    const assertionSources = Array.isArray(assertion.source_refs)
+      ? assertion.source_refs
+      : [];
+    const unavailableSources = assertionSources.filter((sourceRef) => {
+      const source = sourceById.get(sourceRef);
+      return !source ||
+        source.availability === "REFERENCE_ONLY" ||
+        source.review_assertion?.status !== "REVIEWED_BY_CALLER";
+    });
+    if (
+      assertionSources.length === 0 ||
+      unavailableSources.length > 0
+    ) {
+      assertionFailed += 1;
+      checks.push(check(
+        "FAIL",
+        "ERROR",
+        "SEMANTIC_ASSERTION_SOURCE_UNAVAILABLE",
+        "Semantic assertions require supplied, caller-reviewed evidence references.",
+        {
+          path: `${pathValue}.source_refs`,
+          element_refs: [assertion.element_ref],
+          source_refs: assertionSources,
+        },
+      ));
+      continue;
+    }
+    const actual = element[assertion.field];
+    const matched = assertion.operator === "EQUALS"
+      ? actual === assertion.expected
+      : assertion.operator === "INCLUDES" &&
+        typeof actual === "string" &&
+        actual.includes(assertion.expected);
+    if (!matched) {
+      assertionFailed += 1;
+      checks.push(check(
+        "FAIL",
+        "ERROR",
+        "SEMANTIC_ASSERTION_FAILED",
+        `${assertion.assertion_id} did not match the supplied ${assertion.operator} invariant.`,
+        {
+          path: `${pathValue}.expected`,
+          element_refs: [assertion.element_ref],
+          source_refs: assertionSources,
+        },
+      ));
+    } else {
+      assertionPassed += 1;
+    }
+  }
 
   const presentKinds = new Set(elements.map((element) => element.kind));
   for (const profile of selectedProfiles) {
@@ -1006,6 +1235,8 @@ function validateEnvelope(envelopeInput, suppliedEnvelopes = []) {
   const hasWarning = checks.some((item) => item.status === "WARNING");
   const integrityOk = !hasFailure;
   const readinessOk = integrityOk && !hasWarning;
+  const semanticOk =
+    boundedAssertions.length > 0 && assertionFailed === 0;
   const result = hasFailure ? "FAIL" : hasWarning ? "PARTIAL" : "PASS";
   const content = {
     schema: RECEIPT_SCHEMA,
@@ -1026,12 +1257,24 @@ function validateEnvelope(envelopeInput, suppliedEnvelopes = []) {
       "STATUS_SEPARATION",
       "PROFILE_CONFORMANCE",
       "SOURCE_TRACEABILITY",
+      "SUPPLIED_SEMANTIC_ASSERTIONS",
       "SUPPLIED_LINEAGE",
       "VIEW_READINESS",
     ],
     result,
     integrity_ok: integrityOk,
     readiness_ok: readinessOk,
+    semantic_ok: semanticOk,
+    semantic_assertions: {
+      status: boundedAssertions.length === 0
+        ? "NOT_SUPPLIED"
+        : assertionFailed > 0
+          ? "FAIL"
+          : "PASS",
+      supplied: boundedAssertions.length,
+      passed: assertionPassed,
+      failed: assertionFailed,
+    },
     checks,
     lineage_result: lineageResult,
     establishes: [
@@ -1041,6 +1284,7 @@ function validateEnvelope(envelopeInput, suppliedEnvelopes = []) {
         ? ["SUPPLIED_LINEAGE_CONSISTENCY"]
         : []),
       ...(readinessOk ? ["VIEW_READINESS"] : []),
+      ...(semanticOk ? ["SUPPLIED_SEMANTIC_ASSERTION_CONFORMANCE"] : []),
     ],
     not_established: [
       "SOURCE_TRUTH",
@@ -1052,7 +1296,7 @@ function validateEnvelope(envelopeInput, suppliedEnvelopes = []) {
       "COMPLETE_LINEAGE",
     ],
     scope_limit:
-      "Validates only the supplied Expression, caller assertions, and supplied lineage. It does not inspect a repository or establish a current head.",
+      "Validates only the supplied Expression, caller-reviewed semantic assertions, and supplied lineage. Assertion conformance does not independently establish that a source is true, authoritative, complete, or current.",
     persistence_status: "NOT_PERSISTED",
   };
   const receiptDigest = digest(content);
@@ -1246,6 +1490,208 @@ function renderView(args) {
   };
 }
 
+function releaseGate(receipt, rendered) {
+  const reasons = [];
+  if (!receipt.integrity_ok) {
+    reasons.push("INTEGRITY_FAILED");
+  }
+  if (!receipt.readiness_ok) {
+    reasons.push("STRUCTURAL_READINESS_FAILED");
+  }
+  if (!receipt.semantic_ok) {
+    reasons.push(
+      receipt.semantic_assertions.status === "NOT_SUPPLIED"
+        ? "SEMANTIC_ASSERTIONS_NOT_SUPPLIED"
+        : "SEMANTIC_ASSERTIONS_FAILED",
+    );
+  }
+  if (rendered.status !== "RENDERED") {
+    reasons.push("VIEW_BLOCKED");
+  }
+  return {
+    status: reasons.length === 0 ? "READY_FOR_HUMAN_DECISION" : "BLOCKED",
+    reasons,
+    establishes: reasons.length === 0
+      ? [
+        "STRUCTURAL_READINESS",
+        "SUPPLIED_SEMANTIC_ASSERTION_CONFORMANCE",
+        "TRACEABLE_VIEW",
+      ]
+      : [],
+    not_established: [
+      "SOURCE_TRUTH",
+      "SOURCE_AUTHORITY",
+      "BEHAVIORAL_SUCCESS",
+      "HUMAN_ACCEPTANCE",
+      "OPERATIVE_STATUS",
+    ],
+  };
+}
+
+function compilePacket(args) {
+  const input = requireObject(args, "arguments");
+  const responseMode = input.response_mode ?? "SUMMARY";
+  if (!["SUMMARY", "FULL"].includes(responseMode)) {
+    throw new Error("response_mode must be SUMMARY or FULL.");
+  }
+  const viewType = input.view_type ?? "HUMAN_ACTION";
+  const format = input.format ?? "MARKDOWN";
+  const includeArtifact = input.include_artifact ?? false;
+  if (typeof includeArtifact !== "boolean") {
+    throw new Error("include_artifact must be a boolean.");
+  }
+  const suppliedLineage = input.supplied_lineage ?? [];
+  if (!Array.isArray(suppliedLineage) || suppliedLineage.length > 32) {
+    throw new Error("supplied_lineage must contain at most 32 envelopes.");
+  }
+  const compositionInput = { ...input };
+  for (const key of [
+    "response_mode",
+    "view_type",
+    "format",
+    "audience",
+    "include_artifact",
+    "supplied_lineage",
+  ]) {
+    delete compositionInput[key];
+  }
+  const envelope = composeExpression(compositionInput);
+  const receipt = validateEnvelope(envelope, suppliedLineage);
+  const rendered = renderView({
+    envelope,
+    view_type: viewType,
+    format,
+    ...(input.audience === undefined ? {} : { audience: input.audience }),
+    supplied_lineage: suppliedLineage,
+  });
+  const gate = releaseGate(receipt, rendered);
+  const unsignedPacket = {
+    schema: PACKET_SCHEMA,
+    packet_version: "0.1",
+    expression_envelope: envelope,
+    validation_receipt: receipt,
+    view: {
+      request: {
+        view_type: viewType,
+        format,
+        ...(input.audience === undefined
+          ? {}
+          : { audience: requireString(input.audience, "audience", 300) }),
+      },
+      status: rendered.status,
+      ...(rendered.reason === undefined ? {} : { reason: rendered.reason }),
+      manifest: rendered.manifest,
+      artifact: rendered.artifact,
+    },
+    release_gate: gate,
+    storage_contract: {
+      addressing: "CONTENT_ADDRESSED",
+      server_storage: "NONE",
+      caller_may_persist: true,
+      verification_tool: TOOL_NAMES.verifyPacket,
+    },
+    persistence_status: "NOT_PERSISTED",
+  };
+  const packetDigest = digest(unsignedPacket);
+  const packet = {
+    packet_id: `packet:sha256:${packetDigest.value}`,
+    ...unsignedPacket,
+  };
+  if (responseMode === "FULL") {
+    return packet;
+  }
+  return {
+    schema: PACKET_SCHEMA,
+    packet_id: packet.packet_id,
+    packet_version: packet.packet_version,
+    expression_id: envelope.expression_id,
+    expression_digest: envelope.integrity,
+    validation: {
+      receipt_id: receipt.receipt_id,
+      result: receipt.result,
+      integrity_ok: receipt.integrity_ok,
+      readiness_ok: receipt.readiness_ok,
+      semantic_ok: receipt.semantic_ok,
+      semantic_assertions: receipt.semantic_assertions,
+      blocking_checks: receipt.checks.filter(
+        (item) => item.status === "FAIL" || item.status === "WARNING",
+      ),
+    },
+    view: {
+      status: rendered.status,
+      view_id: rendered.manifest?.view_id ?? null,
+      content_digest: rendered.manifest?.output?.content_digest ?? null,
+      ...(includeArtifact ? { artifact: rendered.artifact } : {}),
+    },
+    release_gate: gate,
+    storage_contract: packet.storage_contract,
+    persistence_status: "NOT_PERSISTED",
+  };
+}
+
+function verifyPacket(args) {
+  const packet = requireObject(args.packet, "packet");
+  const claimedId = packet.packet_id;
+  const unsigned = { ...packet };
+  delete unsigned.packet_id;
+  const packetDigest = digest(unsigned);
+  const reasons = [];
+  if (
+    claimedId !== `packet:sha256:${packetDigest.value}` ||
+    packet.schema !== PACKET_SCHEMA
+  ) {
+    reasons.push("PACKET_INTEGRITY_MISMATCH");
+  }
+  const envelope = packet.expression_envelope;
+  const suppliedLineage = args.supplied_lineage ?? [];
+  if (!Array.isArray(suppliedLineage) || suppliedLineage.length > 32) {
+    throw new Error("supplied_lineage must contain at most 32 envelopes.");
+  }
+  const receipt = validateEnvelope(envelope, suppliedLineage);
+  if (
+    packet.validation_receipt?.receipt_id !== receipt.receipt_id ||
+    packet.validation_receipt?.result !== receipt.result
+  ) {
+    reasons.push("VALIDATION_RECEIPT_MISMATCH");
+  }
+  const request = packet.view?.request;
+  if (!request || typeof request !== "object") {
+    reasons.push("VIEW_REQUEST_MISSING");
+  } else {
+    const rendered = renderView({
+      envelope,
+      view_type: request.view_type,
+      format: request.format,
+      ...(request.audience === undefined ? {} : { audience: request.audience }),
+      supplied_lineage: suppliedLineage,
+    });
+    if (
+      canonicalize(packet.view?.manifest ?? null) !==
+        canonicalize(rendered.manifest) ||
+      canonicalize(packet.view?.artifact ?? null) !==
+        canonicalize(rendered.artifact) ||
+      packet.view?.status !== rendered.status
+    ) {
+      reasons.push("VIEW_MISMATCH");
+    }
+    if (
+      canonicalize(packet.release_gate) !==
+      canonicalize(releaseGate(receipt, rendered))
+    ) {
+      reasons.push("RELEASE_GATE_MISMATCH");
+    }
+  }
+  return {
+    schema: PACKET_VERIFICATION_SCHEMA,
+    packet_id: typeof claimedId === "string" ? claimedId : "NOT_ESTABLISHED",
+    packet_digest: packetDigest,
+    valid: reasons.length === 0,
+    reasons,
+    current_validation_receipt_id: receipt.receipt_id,
+    persistence_status: "NOT_PERSISTED",
+  };
+}
+
 function toolResult(structuredContent) {
   return {
     content: [{ type: "text", text: JSON.stringify(structuredContent) }],
@@ -1303,6 +1749,39 @@ const genericEnvelopeSchema = strictObject({
   persistence_status: { const: "NOT_PERSISTED" },
 }, ["expression_id", "expression", "integrity", "persistence_status"]);
 
+function compositionProperties(profileEnum) {
+  return {
+    work_id: { type: "string" },
+    title: { type: "string" },
+    purpose: { type: "string" },
+    primary_profile: profileEnum,
+    secondary_profile: profileEnum,
+    scope: { type: "array", items: { type: "string" } },
+    non_goals: { type: "array", items: { type: "string" } },
+    source_refs: {
+      type: "array",
+      maxItems: MAX_SOURCES,
+      items: { type: "object" },
+    },
+    elements: {
+      type: "array",
+      maxItems: MAX_ELEMENTS,
+      items: { type: "object" },
+    },
+    semantic_assertions: {
+      type: "array",
+      maxItems: MAX_ASSERTIONS,
+      items: { type: "object" },
+    },
+    parents: { type: "array", maxItems: 8, items: { type: "object" } },
+    generated_by: { type: "object" },
+    generation_method: {
+      type: "string",
+      enum: ["SYNTHESIS", "TRANSFORMATION", "REVISION"],
+    },
+  };
+}
+
 function tools() {
   const profileEnum = { type: "string", enum: PROFILE_IDS };
   return [
@@ -1336,23 +1815,7 @@ function tools() {
       title: "Compose Document Expression",
       description:
         "Use when Codex has already performed semantic synthesis and needs a deterministic proposal-scoped Expression assembled from explicit structured inputs. This tool does not research, infer authority, verify sources, persist output, or accept the result.",
-      inputSchema: strictObject({
-        work_id: { type: "string" },
-        title: { type: "string" },
-        purpose: { type: "string" },
-        primary_profile: profileEnum,
-        secondary_profile: profileEnum,
-        scope: { type: "array", items: { type: "string" } },
-        non_goals: { type: "array", items: { type: "string" } },
-        source_refs: { type: "array", maxItems: MAX_SOURCES, items: { type: "object" } },
-        elements: { type: "array", maxItems: MAX_ELEMENTS, items: { type: "object" } },
-        parents: { type: "array", maxItems: 8, items: { type: "object" } },
-        generated_by: { type: "object" },
-        generation_method: {
-          type: "string",
-          enum: ["SYNTHESIS", "TRANSFORMATION", "REVISION"],
-        },
-      }, [
+      inputSchema: strictObject(compositionProperties(profileEnum), [
         "work_id",
         "title",
         "purpose",
@@ -1389,6 +1852,8 @@ function tools() {
         result: { enum: ["PASS", "PARTIAL", "FAIL"] },
         integrity_ok: { type: "boolean" },
         readiness_ok: { type: "boolean" },
+        semantic_ok: { type: "boolean" },
+        semantic_assertions: { type: "object" },
         checks: { type: "array" },
         lineage_result: { type: "object" },
         establishes: { type: "array" },
@@ -1404,6 +1869,8 @@ function tools() {
         "result",
         "integrity_ok",
         "readiness_ok",
+        "semantic_ok",
+        "semantic_assertions",
         "checks",
         "lineage_result",
         "establishes",
@@ -1421,7 +1888,7 @@ function tools() {
       name: TOOL_NAMES.renderView,
       title: "Render Document View",
       description:
-        "Render a bounded human-review, human-action, or machine projection with element traceability. HUMAN_ACTION fails closed unless structural readiness passes. This tool writes nothing.",
+        "Render a bounded human-review, human-action, or machine projection with element traceability. HUMAN_ACTION fails closed unless structural readiness passes; use compile_document_packet when semantic assertions must also gate release. This tool writes nothing.",
       inputSchema: strictObject({
         envelope: { type: "object" },
         view_type: { type: "string", enum: VIEW_TYPES },
@@ -1445,6 +1912,82 @@ function tools() {
         "validation_receipt",
         "manifest",
         "artifact",
+        "persistence_status",
+      ]),
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
+    },
+    {
+      name: TOOL_NAMES.compilePacket,
+      title: "Compile Document Release Packet",
+      description:
+        "Compose, validate, gate, and render in one call. Human-action release requires caller-reviewed semantic assertions. SUMMARY avoids repeating the full Expression; FULL returns a portable content-addressed packet that the caller may persist and later verify.",
+      inputSchema: strictObject({
+        ...compositionProperties(profileEnum),
+        response_mode: { type: "string", enum: ["SUMMARY", "FULL"] },
+        include_artifact: { type: "boolean" },
+        view_type: { type: "string", enum: VIEW_TYPES },
+        format: { type: "string", enum: FORMATS },
+        audience: { type: "string" },
+        supplied_lineage: {
+          type: "array",
+          maxItems: 32,
+          items: { type: "object" },
+        },
+      }, [
+        "work_id",
+        "title",
+        "purpose",
+        "primary_profile",
+        "source_refs",
+        "elements",
+      ]),
+      outputSchema: {
+        type: "object",
+        properties: {
+          schema: { const: PACKET_SCHEMA },
+          packet_id: { type: "string" },
+          persistence_status: { const: "NOT_PERSISTED" },
+        },
+        required: ["schema", "packet_id", "persistence_status"],
+      },
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
+    },
+    {
+      name: TOOL_NAMES.verifyPacket,
+      title: "Verify Document Release Packet",
+      description:
+        "Recompute a FULL portable packet's content address, validation receipt, rendered view, and release gate. This verifies supplied packet consistency, not source truth, human acceptance, persistence, or operative status.",
+      inputSchema: strictObject({
+        packet: { type: "object" },
+        supplied_lineage: {
+          type: "array",
+          maxItems: 32,
+          items: { type: "object" },
+        },
+      }, ["packet"]),
+      outputSchema: strictObject({
+        schema: { const: PACKET_VERIFICATION_SCHEMA },
+        packet_id: { type: "string" },
+        packet_digest: digestSchema,
+        valid: { type: "boolean" },
+        reasons: { type: "array" },
+        current_validation_receipt_id: { type: "string" },
+        persistence_status: { const: "NOT_PERSISTED" },
+      }, [
+        "schema",
+        "packet_id",
+        "packet_digest",
+        "valid",
+        "reasons",
+        "current_validation_receipt_id",
         "persistence_status",
       ]),
       annotations: {
@@ -1485,6 +2028,12 @@ function handleToolCall(params) {
   if (params?.name === TOOL_NAMES.renderView) {
     return toolResult(renderView(args));
   }
+  if (params?.name === TOOL_NAMES.compilePacket) {
+    return toolResult(compilePacket(args));
+  }
+  if (params?.name === TOOL_NAMES.verifyPacket) {
+    return toolResult(verifyPacket(args));
+  }
   throw new Error(`Unknown tool: ${params?.name ?? ""}`);
 }
 
@@ -1514,7 +2063,7 @@ export function processJsonRpcMessage(message) {
       capabilities: { tools: {} },
       serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
       instructions:
-        "This stateless read-only server normalizes explicit semantic inputs, creates content-addressed proposal Expressions, validates supplied structure and lineage, and renders bounded projections. It writes nothing and cannot establish authority, truth, behavior, acceptance, operative status, repository head, or complete lineage.",
+        "This stateless read-only server normalizes explicit semantic inputs, creates content-addressed proposal Expressions, validates supplied structure, assertions, and lineage, and compiles portable release packets. It writes nothing and cannot independently establish source authority, source truth, behavior, acceptance, operative status, repository head, or complete lineage.",
     });
   }
   if (method === "ping") {

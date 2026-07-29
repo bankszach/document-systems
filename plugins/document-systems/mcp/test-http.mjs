@@ -58,7 +58,7 @@ try {
     params: {},
   });
   const toolList = await toolsResponse.json();
-  assert(toolList.result.tools.length === 4, "HTTP transport did not expose four tools.");
+  assert(toolList.result.tools.length === 6, "HTTP transport did not expose six tools.");
   assert(
     toolList.result.tools.every((tool) =>
       tool.annotations.readOnlyHint === true &&
@@ -109,7 +109,7 @@ try {
   process.stdout.write(`${JSON.stringify({
     ok: true,
     transport: "streamable-http-json",
-    tools: 4,
+    tools: 6,
     notification_status: notificationResponse.status,
     get_status: getResponse.status,
     origin_status: originResponse.status,

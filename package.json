@@ -1,11 +1,13 @@
 {
   "name": "document-systems-marketplace",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev-public.mjs",
-    "check": "node --check plugins/document-systems/mcp/server.mjs && node --check plugins/document-systems/mcp/test-server.mjs && node --check plugins/document-systems/mcp/test-http.mjs && node --check api/mcp.mjs && node --check api/health.mjs && node --check api/openai-apps-challenge.mjs && node --check public/demo.js && node --check scripts/dev-public.mjs && node scripts/validate-package.mjs",
+    "benchmark:real-world": "node benchmarks/real-world-v0.2/run.mjs",
+    "integration:wcp": "node integrations/world-control-plane/run.mjs",
+    "check": "node --check plugins/document-systems/mcp/server.mjs && node --check plugins/document-systems/mcp/test-server.mjs && node --check plugins/document-systems/mcp/test-http.mjs && node --check api/mcp.mjs && node --check api/health.mjs && node --check api/openai-apps-challenge.mjs && node --check public/demo.js && node --check scripts/dev-public.mjs && node --check benchmarks/real-world-v0.2/run.mjs && node --check integrations/world-control-plane/run.mjs && node scripts/validate-package.mjs",
     "test": "npm run check && node plugins/document-systems/mcp/test-server.mjs && node plugins/document-systems/mcp/test-http.mjs"
   }
 }

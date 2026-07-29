@@ -1,6 +1,6 @@
 ---
 name: compose-document-system
-description: Compose a consequential charter, standard, plan, procedure, checklist, research object, or human-agent contract as a content-addressed proposal Expression. Use when a user asks to synthesize document types, create a reusable semantic template, turn requirements into a structured document system, or generate traceable views from one immutable source.
+description: Compose a consequential charter, standard, plan, procedure, checklist, research object, or human-agent contract as a content-addressed proposal Expression or portable release packet. Use when a user asks to synthesize document types, create a reusable semantic template, turn requirements into a structured document system, enforce source-backed semantic invariants, or generate traceable views from one immutable source.
 ---
 
 # Compose Document System
@@ -16,17 +16,17 @@ Expression. Do not begin with a universal prose template.
    than one secondary profile.
 3. Read the supplied sources yourself. Mark source review only as
    `REVIEWED_BY_CALLER`; this remains your assertion, not an MCP finding.
-4. Build explicit SourceRefs and semantic elements supported by the user's
-   request or cited evidence.
-5. Call `compose_document_expression`. The tool only normalizes, hashes, and
-   envelopes the structured synthesis; it does not perform research.
-6. Call `validate_document_expression`.
-7. Resolve integrity errors. Report readiness warnings rather than filling
-   them speculatively.
-8. Call `render_document_view` for `HUMAN_REVIEW`, `HUMAN_ACTION`, or
-   `MACHINE` as appropriate.
-9. Hand off the Expression, receipt, view manifest, artifact, and unresolved
-   human decisions as separate outputs.
+4. Build explicit SourceRefs, semantic elements, and assertions for
+   consequential values or transitions supported by caller-reviewed evidence.
+5. Prefer `compile_document_packet` to compose, validate, gate, and render once.
+   Use `SUMMARY` for an efficient review handoff and `FULL` only when the caller
+   needs a portable packet to store or transfer.
+6. Use the separate compose, validate, and render tools only when an existing
+   Expression or staged diagnostic workflow requires them.
+7. Resolve integrity and semantic-assertion failures. Report readiness warnings
+   rather than filling them speculatively.
+8. Hand off the packet identity, release gate, artifact, and unresolved human
+   decisions. A ready gate still requires a human decision.
 
 Populate only elements supported by the user's request or cited evidence.
    Keep unknown fields explicit; do not invent authority, acceptance, or proof.
@@ -43,8 +43,9 @@ Populate only elements supported by the user's request or cited evidence.
 - Do not force a multi-profile document when one focused profile is enough.
 - If the task is a simple low-consequence note, use ordinary writing instead
   of this system.
-- The MCP writes nothing. Save its outputs with ordinary repository tools only
-  when the user explicitly requested project writes.
+- The MCP writes nothing. A FULL packet is portable but remains
+  `NOT_PERSISTED`; save it with ordinary repository tools only when the user
+  explicitly requested project writes.
 
 ## Object and status model
 
@@ -57,7 +58,7 @@ or amendment is valuable.
 Return:
 
 1. selected profiles and why;
-2. immutable Expression envelope and content digest;
-3. deterministic validation receipt;
-4. requested view manifest and artifact;
+2. content-addressed packet and Expression identities;
+3. structural and semantic-assertion gate status;
+4. requested artifact and traceability digest;
 5. unresolved authority, evidence, exception, or acceptance decisions.

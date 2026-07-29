@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Document Systems",
     "subtitle": "Govern document proposals",
-    "description": "Document Systems helps users compose deterministic proposal Expressions, validate structural and evidence boundaries, inspect supplied lineage, and render traceable review or action views. It never persists results or treats generated work as accepted, authoritative, or operative.",
+    "description": "Document Systems helps users compose deterministic proposal Expressions, validate structural and caller-reviewed semantic invariants, inspect supplied lineage, and compile portable traceable release packets. It never persists results or treats generated work as accepted, authoritative, or operative.",
     "category": "PRODUCTIVITY"
   },
   "tools": {
@@ -55,6 +55,30 @@
         "open_world_justification": "Does not publish the projection or change any external or publicly visible system.",
         "destructive_justification": "Cannot delete, overwrite, revoke, send, or make the rendered proposal operative."
       }
+    },
+    "compile_document_packet": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Composes, validates, gates, and renders supplied inputs into a content-addressed result without server persistence.",
+        "open_world_justification": "Does not retrieve sources, publish a packet, or change any external or publicly visible system.",
+        "destructive_justification": "Returns an in-memory summary or portable packet and cannot delete, overwrite, send, approve, or execute anything."
+      }
+    },
+    "verify_document_packet": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Recomputes a supplied packet's content address, validation receipt, view, and release gate without changing it.",
+        "open_world_justification": "Does not resolve the packet from a remote store or contact external sources or systems.",
+        "destructive_justification": "Reports consistency findings only and cannot delete, overwrite, send, approve, or execute anything."
+      }
     }
   },
   "test_cases": [
@@ -96,6 +120,22 @@
       "file_attachment_urls": null,
       "tools_triggered": "render_document_view",
       "expected_output": "Returns a rendered Markdown artifact and view manifest only if readiness passes, with included element IDs and NOT_PERSISTED status.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Compile a semantically gated release packet in one call.",
+      "user_prompt": "Compile a human-action release packet for this incident workflow, requiring the supplied source to confirm the exact ready-to-resolved transition and blocked exception route.",
+      "file_attachment_urls": null,
+      "tools_triggered": "compile_document_packet",
+      "expected_output": "Returns a compact content-addressed packet summary whose release gate is ready only when structure, caller-reviewed semantic assertions, and rendering all pass.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Verify a portable release packet after storage or transfer.",
+      "user_prompt": "Verify this full Document Systems release packet and report any content-address, receipt, view, or release-gate mismatch.",
+      "file_attachment_urls": null,
+      "tools_triggered": "verify_document_packet",
+      "expected_output": "Returns a deterministic packet-verification receipt and rejects any nested tampering without claiming source truth or operative status.",
       "expected_output_url": null
     }
   ],

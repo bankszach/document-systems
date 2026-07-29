@@ -1,13 +1,14 @@
-# Document-system v0.1 model
+# Document-system v0.3 model
 
 ## Boundary
 
 The skill performs synthesis. The MCP performs deterministic normalization,
-construction, hashing, structural validation, and bounded rendering. Project
-authority decides whether outputs are saved, reviewed, accepted, or made
-operative.
+construction, hashing, structural and supplied-invariant validation, release
+gating, packet verification, and bounded rendering. Project authority decides
+whether outputs are saved, reviewed, accepted, or made operative.
 
-The MCP is stateless and read-only. A returned digest is not durable storage.
+The MCP is stateless and read-only. A returned digest or packet identity is not
+durable storage.
 
 ## Four profiles
 
@@ -35,6 +36,7 @@ An Expression contains:
 - purpose, scope, and non-goals;
 - SourceRefs;
 - typed semantic elements;
+- optional caller-reviewed semantic assertions bound to SourceRefs;
 - optional parent anchors;
 - generation provenance.
 
@@ -52,6 +54,11 @@ Likewise:
 - digest integrity does not mean content true;
 - a source locator does not mean the source was reviewed;
 - structural PASS does not establish authority.
+
+Semantic assertions compare an exact element field with a caller-supplied
+`EQUALS` or `INCLUDES` invariant. Every assertion must cite non-reference-only
+evidence marked `REVIEWED_BY_CALLER`. Passing proves only that the Expression
+matches those supplied invariants; it does not independently verify the source.
 
 Use epistemic status only on `CLAIM` elements:
 
@@ -77,8 +84,11 @@ complete lineage.
 ## Separate outputs
 
 - `ExpressionEnvelope`: immutable semantic proposal and content digest.
-- `ValidationReceipt`: deterministic structural checks, scope, established
-  properties, and explicit non-findings.
+- `ValidationReceipt`: deterministic structural and supplied-invariant checks,
+  scope, established properties, and explicit non-findings.
 - `ViewManifest`: projection identity, output digest, traceability, omissions,
   and governance limits.
 - `artifact`: rendered Markdown or JSON returned separately from the manifest.
+- `ReleasePacket`: one content-addressed Expression, receipt, view, and
+  fail-closed release gate. FULL packets are caller-storable and can be checked
+  later with `verify_document_packet`; the MCP never stores them.

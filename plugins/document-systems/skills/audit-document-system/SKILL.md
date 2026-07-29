@@ -17,11 +17,15 @@ the user separately asks for implementation.
 4. Call `list_document_profiles` for the apparent primary profile.
 5. Call `validate_document_expression` with only the lineage records actually
    supplied. Never describe unsupplied repository lineage as valid.
-6. Perform the semantic review in
+6. Inspect `semantic_assertions`: confirm that consequential values and state
+   transitions are covered, cite supplied reviewed evidence, and pass. Absence
+   of assertions is not semantic verification.
+7. Perform the semantic review in
    [references/audit-rubric.md](references/audit-rubric.md).
-7. Classify findings as `keep`, `clarify`, `relocate`, `promote-to-code`,
+8. Classify findings as `keep`, `clarify`, `relocate`, `promote-to-code`,
    `delete`, or `needs-evidence`.
-8. Report integrity, readiness, behavioral proof, and human acceptance
+9. Report integrity, supplied-invariant conformance, readiness, behavioral
+   proof, and human acceptance
    separately.
 
 ## Hard boundaries

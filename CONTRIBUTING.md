@@ -1,12 +1,14 @@
 # Contributing
 
-Contributions should preserve the v0.1 boundary:
+Contributions should preserve the production boundary:
 
 - proposal Expressions remain immutable and content-addressed;
 - profile composition remains one primary plus at most one secondary;
-- validation remains distinct from truth, authority, behavior, and acceptance;
+- validation and caller-reviewed semantic assertion conformance remain distinct
+  from source truth, authority, behavior, and acceptance;
 - rendering remains traceable and fails closed for incomplete action views;
-- MCP tools remain stateless and read-only.
+- MCP tools remain stateless and read-only;
+- portable packets remain caller-managed and never imply server persistence.
 
 Before opening a pull request:
 
@@ -15,5 +17,5 @@ npm test
 ```
 
 Include a behavioral probe for any change intended to prevent a recurring
-failure. Keep new profile or persistence proposals separate until real usage
-demonstrates the need.
+failure. New profiles or server-owned persistence require separate evidence,
+privacy review, and an explicit authority change.
